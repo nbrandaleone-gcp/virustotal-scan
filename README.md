@@ -14,30 +14,65 @@ Workflow architecture:
 
 https://cloud.google.com/workflows/docs/reference/syntax/syntax-cheat-sheet
 
-## Copy file up to GCS
+# Setup environment - Big Picture
 
-gcloud storage cp bad-file.txt gs://nbrandaleone-testing/bad-file.txt
-gcloud storage rm gs://nbrandaleone-testing/bad-file.txt
+1. Add VirusTotal API key into [Google Secrets Manager](https://cloud.google.com/security/products/secret-manager)
+2. Create x3 Cloud Storage Bucket for project
+3. Deploy Cloud Functions
+4. Deploy Workflow
+5. Create EventArc trigger to start Workflow
 
-## Google Secret Manager
+## Gotchas
 
+- The Cloud Functions Service Account key must have permissions to read from Secrets Manager.
+- The Cloud Functions Service Account key must also have permissions to read from an EventArc trigger (eventarc.eventReceive) and execute a Workflow (workflows.invoker).
+- You must get your own Virus Total API key. A personal key can be obtained for free, but will have feature and traffic limitations.
+- This project uses public Storage Buckets for educations purposes. These settings should be locked down for any production purposes.
+
+# How to:
+
+## Create a secret in Google Secrets Manager
+
+```shell
 gcloud secrets create secret-id \
  --replication-policy="automatic"
 
 gcloud secrets versions access version-id --secret="secret-id"
+```
 
-## Malware test file
+## Copy file into a GCS bucket via CLI
 
-https://www.eicar.org/download-anti-malware-testfile/
+```shell
+gcloud storage cp bad-file.txt gs://nbrandaleone-testing/bad-file.txt
+gcloud storage rm gs://nbrandaleone-testing/bad-file.txt
+```
 
-# Create workflow
+## Deploy a Cloud Function
 
+```shell
+gcloud functions deploy ruby-virus-scan \
+--gen2 \
+--runtime=ruby32 \
+--region=us-central1 \
+--entry-point=hello_http \
+--source=. \
+--trigger-http \
+--allow-unauthenticate
+
+gcloud functions delete YOUR_FUNCTION_NAME --gen2 --region REGION
+```
+
+## Create workflow
+
+```shell
 gcloud workflows deploy scan-workflow --source=workflow.yaml
 gcloud workflows executions list ${MY_WORKFLOW} --limit=5
 gcloud workflows delete scan-workflow
+```
 
-# Create EventArc trigger
+## Create an EventArc trigger
 
+```shell
 gcloud eventarc triggers create storage-events-trigger \
  --destination-workflow=scan-workflow \
  --event-filters="type=google.cloud.storage.object.v1.finalized" \
@@ -45,36 +80,15 @@ gcloud eventarc triggers create storage-events-trigger \
  --service-account="161156519703-compute@developer.gserviceaccount.com"
 
 gcloud eventarc triggers delete storage-events-trigger
+```
 
-## Delete function
-
-gcloud functions delete YOUR_FUNCTION_NAME --gen2 --region REGION
-
-# Assign IAM permissions to default compute SA
-
-gcloud projects add-iam-policy-binding testing-355714 \
- --member=serviceAccount:161156519703-compute@developer.gserviceaccount.com \
- --role=roles/eventarc.eventReceiver
-
-gcloud projects add-iam-policy-binding testing-355714 \
- --member=serviceAccount:161156519703-compute@developer.gserviceaccount.com \
- --role=roles/workflows.invoker
-
-gcloud projects add-iam-policy-binding testing-355714 \
- --member=serviceAccount:161156519703-compute@developer.gserviceaccount.com \
- --role=roles/logging.logWriter
-
-SERVICE_ACCOUNT="$(gsutil kms serviceaccount -p testing-355714)"
-
-gcloud projects add-iam-policy-binding testing-355714 \
- --member="serviceAccount:${SERVICE_ACCOUNT}" \
- --role='roles/pubsub.publisher'
-
-gcloud projects add-iam-policy-binding testing-355714 \
- --member=serviceAccount:service-161156519703@gcp-sa-pubsub.iam.gserviceaccount.com \
- --role=roles/iam.serviceAccountTokenCreator
+---
 
 # References:
 
 - https://cloud.google.com/eventarc/docs/workflows/quickstart-storage#yaml
 -
+
+### Malware test file
+
+https://www.eicar.org/download-anti-malware-testfile/
