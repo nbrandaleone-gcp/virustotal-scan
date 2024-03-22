@@ -17,7 +17,7 @@ https://cloud.google.com/workflows/docs/reference/syntax/syntax-cheat-sheet
 # Setup environment - Big Picture
 
 1. Add VirusTotal API key into [Google Secrets Manager](https://cloud.google.com/security/products/secret-manager)
-2. Create x3 Cloud Storage Bucket for project
+2. Create x3 Cloud Storage Buckets for project
 3. Deploy Cloud Functions
 4. Deploy Workflow
 5. Create EventArc trigger to start Workflow
