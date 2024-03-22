@@ -40,9 +40,13 @@ gcloud secrets create secret-id \
 gcloud secrets versions access version-id --secret="secret-id"
 ```
 
-## Copy file into a GCS bucket via CLI
+## Copy a file into a GCS bucket via CLI
 
 ```shell
+# Create a bucket
+gcloud storage buckets create gs://my-bucket gs://my-other-bucket
+
+# Move and delete files
 gcloud storage cp bad-file.txt gs://nbrandaleone-testing/bad-file.txt
 gcloud storage rm gs://nbrandaleone-testing/bad-file.txt
 ```
@@ -62,7 +66,7 @@ gcloud functions deploy ruby-virus-scan \
 gcloud functions delete YOUR_FUNCTION_NAME --gen2 --region REGION
 ```
 
-## Create workflow
+## Create a Workflow
 
 ```shell
 gcloud workflows deploy scan-workflow --source=workflow.yaml
@@ -80,6 +84,27 @@ gcloud eventarc triggers create storage-events-trigger \
  --service-account="161156519703-compute@developer.gserviceaccount.com"
 
 gcloud eventarc triggers delete storage-events-trigger
+```
+
+## Test Cloud Functions locally (Ruby Functions Framework)
+
+```shell
+bundle exec functions-framework-ruby --target hello_http
+```
+
+## View Google Logs
+
+```shell
+gcloud functions logs read ruby-virus-scan --limit=10
+
+gcloud beta run services logs read my-service --log-filter="severity>=ERROR"
+
+gcloud beta run services logs read my-service --log-filter='timestamp<="2015-05-31T23:59:59Z" AND
+ timestamp>="2015-05-31T00:00:00Z"'
+
+ gcloud beta run services logs read my-service --log-filter="textPayload:SearchText" --limit=10 --format=json
+
+ gcloud beta run services logs tail SERVICE --project PROJECT-I
 ```
 
 ---
