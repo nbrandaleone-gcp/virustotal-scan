@@ -8,7 +8,7 @@ to determine if the files are safe. Once a determination has been made,
 the file is moved into a "safe" or "quarantine" bucket.
 
 Worflow architecture:
-![architectural diagram](https://github.com/nbrandaleone-gcp/virustotal-scan/workflor-diagram.png)
+![architectural diagram](https://github.com/nbrandaleone-gcp/virustotal-scan/workflow-diagram.png)
 
 ## Workflow cheat-sheet
 
