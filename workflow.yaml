@@ -1,0 +1,24 @@
+  main:
+    params: [event]
+    steps:
+        - log_event:
+            call: sys.log
+            args:
+                text: ${event}
+                severity: INFO
+        - extract_bucket_object:
+            assign:
+            - bucket: ${event.data.bucket}
+            - object: ${event.data.name}
+            - md5hash: ${event.data.md5Hash}
+        - send_filename:
+            call: http.post
+            args:
+              url: https://ruby-virus-scan-yspciwmbia-uc.a.run.app
+              body: 
+                bucket: ${bucket}
+                object: ${object}
+                md5hash: ${md5hash}
+            result: the_message
+        - return_message:
+            return: ${the_message}
