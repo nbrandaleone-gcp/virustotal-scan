@@ -24,7 +24,7 @@ require 'digest'
 # TODO: automated test scripts
 puts('Starting application....')
 $debug = true
-$log = Logger.new(STDOUT)	
+$log = Logger.new(STDOUT)
 $log.level = Logger::DEBUG  # (FATAL, ERROR, WARN, INFO, DEBUG)
 
 # Get VirusTotal API key securely via Google Secrets Manager
@@ -33,25 +33,25 @@ def get_secret_apikey
 	secret_id  = "nick-virustotal-apikey"
 	#secret_id  = "enterprise-virustotal-apikey"
 	version_id = "1"
-	
+
 	# Create a Secret Manager client.
 	client = Google::Cloud::SecretManager.secret_manager_service
-	
+
 	# Build the resource name of the secret version.
 	name = client.secret_version_path(
 	  project:        project_id,
 	  secret:         secret_id,
 	  secret_version: version_id
 	)
-	
+
 	# Access the secret version.
-	begin 
+	begin
 		version = client.access_secret_version name: name
 	rescue
 		$log.debug "ERROR: Can't access Google Secrets Manager. Terminating..."
 		exit(1)
 	end
-	
+
 	# Return the secret payload.
 	payload = version.payload.data
 	$log.debug "APIKEY: #{payload}"
@@ -91,7 +91,7 @@ def get_md5(bucket, file)
 	if md5_hash.empty? || md5_hash.nil?
 		warn "Did not get valid MD5 from Google Cloud Storage metadata. Terminating..."
 		exit 1
-	end 
+	end
 	unpacked_md5 = md5_hash
 		.then { decode64 _1 }
 		.then { bin_to_decimal _1 }
@@ -131,6 +131,7 @@ FunctionsFramework.http "hello_http" do |request|
   $log.info request.body.read
   bucket = (request.body.rewind && JSON.parse(request.body.read)["bucket"] rescue nil)
   file   = (request.body.rewind && JSON.parse(request.body.read)["object"] rescue nil)
+  md5    = (request.body.rewind && JSON.parse(request.body.read)["md5hash"] rescue nil)
   #name = request.params["name"] ||
   #		 (request.body.rewind && JSON.parse(request.body.read)["name"] rescue nil) ||
   #		 "World"
@@ -138,9 +139,9 @@ FunctionsFramework.http "hello_http" do |request|
   # You can also return a Rack::Response object, a Rack response array, or
   # a hash which will be JSON-encoded into a response.
 
-  md5 = get_md5(bucket, file)
+#  md5 = get_md5(bucket, file)
   response = get_virustotal_report(md5)
-  $log.info response 
+  $log.info response
   "Bucket: #{bucket}, File: #{file}"
   #"Hello #{CGI.escape_html name}!"
 end
