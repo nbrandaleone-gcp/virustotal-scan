@@ -132,16 +132,6 @@ def get_score(vt_report)
   end
 end
 
-# Move to new function
-def dangerous_gcs(bucket, file)
-  quarantine_bucket = ENV['quarantine_bucket']
-  clean_bucket = ENV['clean_bucket']
-  hash = { 'source_bucket': bucket, 'dest_bucket': quarantine_bucket, 
-           'file': file }
-  $log.debug hash
-  hash
-end
-
 # We will receive a POST, with a JSON data blob
 FunctionsFramework.http "hello_http" do |request|
   # The request parameter is a Rack::Request object.
