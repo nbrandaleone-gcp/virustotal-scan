@@ -109,8 +109,9 @@ def get_virustotal_report(file_hash)
 	apikey = get_secret_apikey
 	headers = {Accept: 'application/json', 'x-apikey': apikey}
 	begin
-		res = Net::HTTP.get_response(uri, headers)
-    warn "VirusTotal Headers: #{res.to_hash.inspect}"
+	  res = Net::HTTP.get_response(uri, headers)
+ #     warn "VirusTotal Headers: #{res.to_hash.inspect}"
+ #     $log.debug res.body
 	  res.body
 	rescue Exception => error
 		$log.debug "Error connecting to Virus Total."
@@ -119,27 +120,43 @@ def get_virustotal_report(file_hash)
 end
 
 # Parse response fields to determine if bucket/file is safe or not
-def file_danger
+def get_score(vt_report)
+  begin
+    json = JSON.parse(vt_report)
+    score = json['data']['attributes']['last_analysis_stats']['malicious']
+    $log.debug "Malicious score: #{score}"
+    score
+  rescue => e
+    warn "Unable to parse JSON"
+    warn e
+  end
 end
 
-# Simplify web server construction using Google Functions Framework
+# Move to new function
+def dangerous_gcs(bucket, file)
+  quarantine_bucket = ENV['quarantine_bucket']
+  clean_bucket = ENV['clean_bucket']
+  hash = { 'source_bucket': bucket, 'dest_bucket': quarantine_bucket, 
+           'file': file }
+  $log.debug hash
+  hash
+end
+
 # We will receive a POST, with a JSON data blob
-# {"bucket":"nbrandaleone-testing","object":"aviation-weather.jpg"}
 FunctionsFramework.http "hello_http" do |request|
   # The request parameter is a Rack::Request object.
   # See https://www.rubydoc.info/gems/rack/Rack/Request
+  #name = request.params["name"] || (request.body.rewind && JSON.parse(request.body.read)["name"] rescue nil) ||
   message = "I received a request: #{request.request_method} #{request.url}"
-  $log.info message
-  $log.info request.body.read
+  $log.info "#{message}\n #{request.body.read}"
   bucket  = (request.body.rewind && JSON.parse(request.body.read)["bucket"] rescue nil)
   file    = (request.body.rewind && JSON.parse(request.body.read)["object"] rescue nil)
   md5hash = (request.body.rewind && JSON.parse(request.body.read)["md5hash"] rescue nil)
-  #name = request.params["name"] ||
-  #		 (request.body.rewind && JSON.parse(request.body.read)["name"] rescue nil) ||
 
   md5 = get_md5(md5hash)
-  response = get_virustotal_report(md5)
-  $log.info response
-  "Bucket: #{bucket}, File: #{file}, MD5: #{md5}"
-  #"Hello #{CGI.escape_html name}!"
+  vt_report = get_virustotal_report(md5)
+  score = get_score(vt_report)
+  $log.info "Bucket: #{bucket}, File: #{file}, MD5: #{md5}, Score: #{score}"
+
+  { 'source_bucket': bucket, 'file': file, 'score': score }
 end
