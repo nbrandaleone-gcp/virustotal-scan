@@ -114,6 +114,11 @@ gcloud beta run services logs read my-service --log-filter='timestamp<="2015-05-
 - https://cloud.google.com/eventarc/docs/workflows/quickstart-storage#yaml
 -
 
+### Functions Framework for Ruby
+
+- https://googlecloudplatform.github.io/functions-framework-ruby/v1.4.1/index.html
+-
+
 ### Malware test file
 
 https://www.eicar.org/download-anti-malware-testfile/
