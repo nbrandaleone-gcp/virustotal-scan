@@ -17,21 +17,21 @@ require "json"
 require 'uri'
 require 'net/http'
 require 'digest'
-
+require 'dotenv'
 # TODO: Set project_id to constant, or grab from ENV variable (if possible)
 # TODO: logger.info may be setup by Functions Framework. Check.
 # TODO: Proper function comments
 # TODO: automated test scripts
 puts('Starting application....')
 $debug = true
+Dotenv.load
 $log = Logger.new(STDOUT)
 $log.level = Logger::DEBUG  # (FATAL, ERROR, WARN, INFO, DEBUG)
 
 # Get VirusTotal API key securely via Google Secrets Manager
 def get_secret_apikey
-	project_id = "testing-355714"
-	secret_id  = "nick-virustotal-apikey"
-	#secret_id  = "enterprise-virustotal-apikey"
+  project_id = ENV["project-id"]
+  secret_id  = ENV["secret-id"]
 	version_id = "1"
 
 	# Create a Secret Manager client.
@@ -82,7 +82,7 @@ end
 # Get the md5 hash from the Google Storage Bucket metadata for bucket/file
 # It is also possible to get this from the initiating EventArc trigger data block
 def get_md5(bucket, file)
-	project_id = "testing-355714"
+  project_id = ENV["project-id"]
 	storage = Google::Cloud::Storage.new(project_id: project_id)
 	bucket = storage.bucket bucket
 	file_ref = bucket.file file
@@ -134,14 +134,10 @@ FunctionsFramework.http "hello_http" do |request|
   md5    = (request.body.rewind && JSON.parse(request.body.read)["md5hash"] rescue nil)
   #name = request.params["name"] ||
   #		 (request.body.rewind && JSON.parse(request.body.read)["name"] rescue nil) ||
-  #		 "World"
-  # Return the response body as a string.
-  # You can also return a Rack::Response object, a Rack response array, or
-  # a hash which will be JSON-encoded into a response.
 
 #  md5 = get_md5(bucket, file)
   response = get_virustotal_report(md5)
   $log.info response
-  "Bucket: #{bucket}, File: #{file}"
+  "Bucket: #{bucket}, File: #{file}, MD5: #{md5}"
   #"Hello #{CGI.escape_html name}!"
 end

@@ -10,11 +10,17 @@ the file is moved into a "safe" or "quarantine" bucket.
 Workflow architecture:
 ![Architectural diagram](./workflow-diagram.png)
 
-## Workflow cheat-sheet
+> [!NOTE]
+> The workflow assumes that the file in question has already been uploaded and scanned by VirusTotal. We are them moving the file into a bucket based upon the results of the scan. IRL, one should check to see if the file has been scanned, and if not upload it to the VirusTotal website. After some time (usually minutes), the results should be available.
 
-https://cloud.google.com/workflows/docs/reference/syntax/syntax-cheat-sheet
+## Cloud Functions and Functions Framework
 
-# Setup environment - Big Picture
+Cloud Functions are meant to be small chunks of code that are typicall event-driven in nature. Google has created a web framework that simplifies the boilerplate of setting up a web-server for all supported Cloud Functions languages. For example, for Python, this is wrapper around Flask. Likewise, for Ruby, it is a wrapper around Sinatra. I find Ruby particularly expressive, so I wrote these functions in Ruby, while leveraging Functions Framework.
+
+1. https://cloud.google.com/functions/docs/functions-framework-ruby
+2. https://github.com/GoogleCloudPlatform/functions-framework
+
+# Setup environment
 
 1. Add VirusTotal API key into [Google Secrets Manager](https://cloud.google.com/security/products/secret-manager)
 2. Create x3 Cloud Storage Buckets for project
@@ -43,12 +49,13 @@ gcloud secrets versions access version-id --secret="secret-id"
 ## Copy a file into a GCS bucket via CLI
 
 ```shell
-# Create a bucket
-gcloud storage buckets create gs://my-bucket gs://my-other-bucket
+# Create/Delete a bucket
+gsutil mb -c standard -l us-east1 gs://some-bucket
+gsutil rb [-f] gs://<bucket_name>...
 
 # Move and delete files
-gcloud storage cp bad-file.txt gs://nbrandaleone-testing/bad-file.txt
-gcloud storage rm gs://nbrandaleone-testing/bad-file.txt
+gsutil cp *.txt gs://my-bucket
+gsutil rm gs://bucket/kitten.png
 ```
 
 ## Deploy a Cloud Function
@@ -118,6 +125,10 @@ gcloud beta run services logs read my-service --log-filter='timestamp<="2015-05-
 
 - https://googlecloudplatform.github.io/functions-framework-ruby/v1.4.1/index.html
 -
+
+### Workflow cheat-sheet
+
+- https://cloud.google.com/workflows/docs/reference/syntax/syntax-cheat-sheet
 
 ### Malware test file
 
