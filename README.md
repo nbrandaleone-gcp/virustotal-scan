@@ -11,17 +11,18 @@ Workflow architecture:
 ![Architectural diagram](./workflow-diagram.png)
 
 > [!NOTE]
-> The workflow assumes that the file in question has already been uploaded and scanned by VirusTotal. We are them moving the file into a bucket based upon the results of the scan. IRL, one should check to see if the file has been scanned, and if not upload it to the VirusTotal website. After some time (usually minutes), the results should be available.
+> This workflow assumes that the file in question has already been uploaded and scanned by VirusTotal. We are then moving the file into a bucket based upon the results of the scan. IRL, one should check to see if the file has been scanned, and if not upload it to the VirusTotal website. After some time (usually minutes), the results will become available.
 
 ## Cloud Functions and Functions Framework
 
 Cloud Functions are meant to be small chunks of code that are typicall event-driven in nature. Google has created a web framework that simplifies the boilerplate of setting up a web-server for all supported Cloud Functions languages. For example, for Python, this is wrapper around Flask. Likewise, for Ruby, it is a wrapper around Sinatra. I find Ruby particularly expressive, so I wrote these functions in Ruby, while leveraging Functions Framework.
 
-1. https://cloud.google.com/functions/docs/functions-framework-ruby
-2. https://github.com/GoogleCloudPlatform/functions-framework
+1. https://github.com/GoogleCloudPlatform/functions-framework
+2. https://cloud.google.com/functions/docs/functions-framework-ruby
 
 # Setup environment
 
+0. Update .env file with project_id and secret manager key name
 1. Add VirusTotal API key into [Google Secrets Manager](https://cloud.google.com/security/products/secret-manager)
 2. Create x3 Cloud Storage Buckets for project
 3. Deploy Cloud Functions
@@ -53,7 +54,8 @@ gcloud secrets versions access version-id --secret="secret-id"
 gsutil mb -c standard -l us-east1 gs://some-bucket
 gsutil rb [-f] gs://<bucket_name>...
 
-# Move and delete files
+# List, move and delete files
+gsutil ls gs://nbrandaleone-testing
 gsutil cp *.txt gs://my-bucket
 gsutil rm gs://bucket/kitten.png
 ```

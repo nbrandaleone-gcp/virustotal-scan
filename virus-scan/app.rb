@@ -18,21 +18,23 @@ require 'uri'
 require 'net/http'
 require 'digest'
 require 'dotenv'
-# TODO: Set project_id to constant, or grab from ENV variable (if possible)
+
 # TODO: logger.info may be setup by Functions Framework. Check.
 # TODO: Proper function comments
-# TODO: automated test scripts
+
 puts('Starting application....')
-$debug = true
 Dotenv.load
+$debug = true
 $log = Logger.new(STDOUT)
 $log.level = Logger::DEBUG  # (FATAL, ERROR, WARN, INFO, DEBUG)
 
 # Get VirusTotal API key securely via Google Secrets Manager
 def get_secret_apikey
-  project_id = ENV["project-id"]
-  secret_id  = ENV["secret-id"]
+  project_id = ENV["project_id"]
+  secret_id  = ENV["secret_id"]
 	version_id = "1"
+  $log.debug "project_id: #{project_id}"
+  $log.debug "secret_id: #{secret_id}"
 
 	# Create a Secret Manager client.
 	client = Google::Cloud::SecretManager.secret_manager_service
@@ -81,13 +83,13 @@ end
 
 # Get the md5 hash from the Google Storage Bucket metadata for bucket/file
 # It is also possible to get this from the initiating EventArc trigger data block
-def get_md5(bucket, file)
-  project_id = ENV["project-id"]
-	storage = Google::Cloud::Storage.new(project_id: project_id)
-	bucket = storage.bucket bucket
-	file_ref = bucket.file file
-	md5_hash = file_ref.md5
-	$log.debug "MD5: #{md5_hash}"
+def get_md5(md5_hash)  # was (bucket, file)
+#  project_id = ENV["project-id"]
+#	storage = Google::Cloud::Storage.new(project_id: project_id)
+#	bucket = storage.bucket bucket
+#	file_ref = bucket.file file
+#	md5_hash = file_ref.md5
+#	$log.debug "MD5: #{md5_hash}"
 	if md5_hash.empty? || md5_hash.nil?
 		warn "Did not get valid MD5 from Google Cloud Storage metadata. Terminating..."
 		exit 1
@@ -108,12 +110,12 @@ def get_virustotal_report(file_hash)
 	headers = {Accept: 'application/json', 'x-apikey': apikey}
 	begin
 		res = Net::HTTP.get_response(uri, headers)
-	rescue Exception
-		$log.debug "Error connecting to Virus Total.  Terminating...."
-		$log.debug Exception
+    warn "VirusTotal Headers: #{res.to_hash.inspect}"
+	  res.body
+	rescue Exception => error
+		$log.debug "Error connecting to Virus Total."
+    warn error.message
 	end
-	warn "VirusTotal response headers #{res.headers}"
-	res.body
 end
 
 # Parse response fields to determine if bucket/file is safe or not
@@ -129,13 +131,13 @@ FunctionsFramework.http "hello_http" do |request|
   message = "I received a request: #{request.request_method} #{request.url}"
   $log.info message
   $log.info request.body.read
-  bucket = (request.body.rewind && JSON.parse(request.body.read)["bucket"] rescue nil)
-  file   = (request.body.rewind && JSON.parse(request.body.read)["object"] rescue nil)
-  md5    = (request.body.rewind && JSON.parse(request.body.read)["md5hash"] rescue nil)
+  bucket  = (request.body.rewind && JSON.parse(request.body.read)["bucket"] rescue nil)
+  file    = (request.body.rewind && JSON.parse(request.body.read)["object"] rescue nil)
+  md5hash = (request.body.rewind && JSON.parse(request.body.read)["md5hash"] rescue nil)
   #name = request.params["name"] ||
   #		 (request.body.rewind && JSON.parse(request.body.read)["name"] rescue nil) ||
 
-#  md5 = get_md5(bucket, file)
+  md5 = get_md5(md5hash)
   response = get_virustotal_report(md5)
   $log.info response
   "Bucket: #{bucket}, File: #{file}, MD5: #{md5}"

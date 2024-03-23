@@ -5,4 +5,4 @@ gem "google-cloud-storage", "~> 1.49"
 gem "google-cloud-secret_manager", '~> 1.4'
 gem 'addressable', '~> 2.7'
 gem 'logger', '~> 1.6'
-gem 'dotenv', '-> 3.1.0'
+gem 'dotenv', '~> 3.1.0'
