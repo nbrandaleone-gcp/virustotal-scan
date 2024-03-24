@@ -1,11 +1,9 @@
 # rakfile
 
-desc "Default task"
-task :default do
-  puts "default task is unassigned"
-end
+desc "Run all tests"
+task default: %w[test:good test:bad test:unknown]
 
-namespace :test do
+namespace "test" do
   desc "Copy 'bad' file into primary bucket"
   task :bad do
     sh "gsutil cp bad-file.txt gs://nbrandaleone-testing/"
