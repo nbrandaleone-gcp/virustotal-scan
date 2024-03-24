@@ -71,6 +71,9 @@ end
 # Google format: file -> md5 hash (in hex) -> binary digits -> Base64 encoded
 def decode64(bin)
 	bin.unpack("m")
+  # I found an alternate way.
+  # require 'base64'
+  # name = Base64.decode64 event.data["message"]["data"] rescue "World"
 end
 
 def bin_to_decimal(bin)
@@ -148,5 +151,5 @@ FunctionsFramework.http "hello_http" do |request|
   score = get_score(vt_report)
   $log.info "Bucket: #{bucket}, File: #{file}, MD5: #{md5}, Score: #{score}"
 
-  { 'source_bucket': bucket, 'file': file, 'score': score }
+  { 'bucket': bucket, 'object': file, 'score': score }
 end
