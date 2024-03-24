@@ -11,7 +11,7 @@ Workflow architecture:
 ![Architectural diagram](./workflow-diagram.png)
 
 > [!NOTE]
-> This workflow assumes that the file in question has already been uploaded and scanned by VirusTotal. We are then moving the file into a bucket based upon the results of the scan. IRL, one should check to see if the file has been scanned, and if not upload it to the VirusTotal website. After some time (usually minutes), the results will become available.
+> This workflow assumes that the file in question has already been uploaded and scanned by VirusTotal. We are then moving the file into a bucket based upon the results of the scan. IRL, one should check to see if the file has been scanned, and if it has not, then upload it to the VirusTotal website. After some time (usually minutes), the results will become available.
 
 ## Cloud Functions and Functions Framework
 
@@ -62,8 +62,8 @@ gsutil hash -m gs://nbrandaleone-testing/bad-file.txt
 ```
 
 > [!WARNING]
-> Since the focus of this tutorial in on security, we shoudl adjust these CF to run only authenticated.
-> We *MUST* use a Service Account with proper permissions!
+> Since the focus of this tutorial in on security, we shoudld adjust these CF to run authenticated.
+> We **MUST** use a Service Account with proper permissions!
 
 ## Deploy a Cloud Function
 
@@ -143,4 +143,4 @@ gcloud beta run services logs read my-service --log-filter='timestamp<="2015-05-
 
 ### Malware test file
 
-https://www.eicar.org/download-anti-malware-testfile/
+- https://www.eicar.org/download-anti-malware-testfile/
