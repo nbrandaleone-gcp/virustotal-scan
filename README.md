@@ -1,9 +1,9 @@
 # README.md
 
-This repo contains code and directions to set up a Google Cloud Workflow,
-that integrates with VirusTotal to scan files, and move them into
+This repo contains code and directions to set up a Google Cloud [Workflows](https://cloud.google.com/workflows?hl=en),
+that integrates with [VirusTotal](https://www.virustotal.com/gui/home/upload) to scan files, and move them into
 appropriate Storage Buckets. Two Cloud Functions,
-written in Ruby, do the various checks and API calls to VirusTotal in order
+written in [Ruby](https://www.ruby-lang.org/en/), do the various checks and API calls to VirusTotal in order
 to determine if the files are safe. Once a determination has been made,
 the file is moved into a "safe" or "quarantine" bucket.
 
@@ -15,18 +15,18 @@ Workflow architecture:
 
 ## Cloud Functions and Functions Framework
 
-Cloud Functions are meant to be small chunks of code that are typicall event-driven in nature. Google has created a web framework that simplifies the boilerplate of setting up a web-server for all supported Cloud Functions languages. For example, for Python, this is wrapper around Flask. Likewise, for Ruby, it is a wrapper around Sinatra. I find Ruby particularly expressive, so I wrote these functions in Ruby, while leveraging Functions Framework.
+Cloud Functions are meant to be small chunks of code that are typicall event-driven in nature. Google has created a web framework that simplifies the boilerplate of setting up a web-server for all supported Cloud Functions languages. For example, for Python, this is wrapper around [Flask](https://flask.palletsprojects.com/en/3.0.x/). Likewise, for Ruby, it is a wrapper around [Sinatra](https://sinatrarb.com/). I find Ruby particularly expressive, so I wrote these functions in Ruby, while leveraging [Functions Framework](https://cloud.google.com/functions/docs/functions-framework).
 
 1. https://github.com/GoogleCloudPlatform/functions-framework
 2. https://cloud.google.com/functions/docs/functions-framework-ruby
 
 # Setup environment
 
-0. Update .env file with project_id and secret manager key name
+0. Update .env file with project_id, secret manager key name and Google Storage Bucket names
 1. Add VirusTotal API key into [Google Secrets Manager](https://cloud.google.com/security/products/secret-manager)
 2. Create x3 Cloud Storage Buckets for project
 3. Deploy Cloud Functions
-4. Deploy Workflow
+4. Deploy Workflows
 5. Create EventArc trigger to start Workflow
 
 ## Gotchas
@@ -34,7 +34,7 @@ Cloud Functions are meant to be small chunks of code that are typicall event-dri
 - The Cloud Functions Service Account key must have permissions to read from Secrets Manager.
 - The Cloud Functions Service Account key must also have permissions to read from an EventArc trigger (eventarc.eventReceive) and execute a Workflow (workflows.invoker).
 - You must get your own Virus Total API key. A personal key can be obtained for free, but will have feature and traffic limitations.
-- This project uses public Storage Buckets for educations purposes. These settings should be locked down for any production purposes.
+- Ensure that your Google Cloud Storage Buckets are private, closed to Internet prying.
 
 # How to:
 
@@ -54,11 +54,16 @@ gcloud secrets versions access version-id --secret="secret-id"
 gsutil mb -c standard -l us-east1 gs://some-bucket
 gsutil rb [-f] gs://<bucket_name>...
 
-# List, move and delete files
+# File commands
 gsutil ls gs://nbrandaleone-testing
 gsutil cp *.txt gs://my-bucket
 gsutil rm gs://bucket/kitten.png
+gsutil hash -m gs://nbrandaleone-testing/bad-file.txt
 ```
+
+> [!WARNING]
+> Since the focus of this tutorial in on security, we shoudl adjust these CF to run only authenticated.
+> We *MUST* use a Service Account with proper permissions!
 
 ## Deploy a Cloud Function
 
@@ -70,7 +75,7 @@ gcloud functions deploy ruby-virus-scan \
 --entry-point=hello_http \
 --source=. \
 --trigger-http \
---allow-unauthenticate
+--allow-unauthenticated
 
 gcloud functions delete YOUR_FUNCTION_NAME --gen2 --region REGION
 ```
@@ -121,14 +126,18 @@ gcloud beta run services logs read my-service --log-filter='timestamp<="2015-05-
 # References:
 
 - https://cloud.google.com/eventarc/docs/workflows/quickstart-storage#yaml
--
+- https://cloud.google.com/security/products/secret-manager
+- https://cloud.google.com/sdk/gcloud/reference/topic/gcloudignore
 
-### Functions Framework for Ruby
+### Ruby libraries and information
 
 - https://googlecloudplatform.github.io/functions-framework-ruby/v1.4.1/index.html
--
+- https://bundler.io/
+- https://ruby.github.io/rake/doc/rakefile_rdoc.html
+- https://runfile.dannyb.co/
+- https://chrisseaton.com/truffleruby/
 
-### Workflow cheat-sheet
+### Workflows cheat-sheet
 
 - https://cloud.google.com/workflows/docs/reference/syntax/syntax-cheat-sheet
 

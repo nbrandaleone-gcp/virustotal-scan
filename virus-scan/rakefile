@@ -1,0 +1,23 @@
+# rakfile
+
+desc "Default task"
+task :default do
+  puts "default task is unassigned"
+end
+
+desc "Deploy ruby app.rb <gcs_move_file> to Google Cloud Functions"
+task :deploy do
+  sh "gcloud functions deploy ruby-virus-scan \
+    --gen2 \
+    --runtime=ruby32 \
+    --region=us-central1 \
+    --entry-point=hello_http \
+    --source=. \
+    --trigger-http \
+    --allow-unauthenticated"
+end
+
+desc "Start local functions_framework server on port 8080"
+task :start do
+  sh "bundle exec functions-framework-ruby --target hello_http"
+end

@@ -1,0 +1,23 @@
+# rakfile
+
+desc "Default task"
+task :default do
+  puts "default task is unassigned"
+end
+
+namespace :test do
+  desc "Copy 'bad' file into primary bucket"
+  task :bad do
+    sh "gsutil cp bad-file.txt gs://nbrandaleone-testing/"
+  end
+
+  desc "Copy 'good' file into primary bucket"
+  task :good do
+    sh "gsutil cp empty-file.txt gs://nbrandaleone-testing/"
+  end
+
+  desc "Copy 'unknown' file into primary bucket"
+  task :unknown do
+    sh "gsutil cp aviation-weather.jpg gs://nbrandaleone-testing/"
+  end
+end

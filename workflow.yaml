@@ -11,7 +11,7 @@
             - bucket: ${event.data.bucket}
             - object: ${event.data.name}
             - md5hash: ${event.data.md5Hash}
-        - send_filename:
+        - VirusTotal_scan:
             call: http.post
             args:
               url: https://ruby-virus-scan-yspciwmbia-uc.a.run.app
@@ -19,6 +19,22 @@
                 bucket: ${bucket}
                 object: ${object}
                 md5hash: ${md5hash}
-            result: the_message
+            result: api_response1
+        - log_api_response1:
+            call: sys.log
+            args:
+              json: ${api_response1}
+        - extract_score:
+            assign:
+              - score: ${api_response1.body.score}
+        - move_file:
+            call: http.post
+            args:
+              url: https://ruby-move-file-yspciwmbia-uc.a.run.app
+              body: 
+                score:  ${score}
+                bucket: ${bucket}
+                object: ${object}
+            result: file_status
         - return_message:
-            return: ${the_message}
+            return: ${file_status}
