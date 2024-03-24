@@ -126,6 +126,8 @@ gcloud beta run services logs read my-service --log-filter='timestamp<="2015-05-
 
 # References:
 
+### Google Cloud documentation
+
 - https://cloud.google.com/workflows/docs/overview
 - https://cloud.google.com/eventarc/docs/workflows/quickstart-storage#yaml
 - https://cloud.google.com/security/products/secret-manager
@@ -151,3 +153,7 @@ gcloud beta run services logs read my-service --log-filter='timestamp<="2015-05-
 
 - https://www.eicar.org/download-anti-malware-testfile/
 - An empty file is considered 'good' in all cases.
+
+### Similar blog
+
+- https://medium.com/kpmg-uk-engineering/usecase-3-implement-a-cloud-function-to-scan-google-cloud-storage-data-with-virustotal-api-prior-c5d0348e6f32
