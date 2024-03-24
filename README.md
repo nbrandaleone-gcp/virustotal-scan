@@ -5,7 +5,8 @@ that integrates with [VirusTotal](https://www.virustotal.com/gui/home/upload) to
 appropriate Storage Buckets. Two Cloud Functions,
 written in [Ruby](https://www.ruby-lang.org/en/), do the various checks and API calls to VirusTotal in order
 to determine if the files are safe. Once a determination has been made,
-the file is moved into a "safe" or "quarantine" bucket.
+the file is moved into a "safe" or "quarantine" bucket. If we can't determine the status of the file,
+we leave the in the original bucket.
 
 Workflow architecture:
 ![Architectural diagram](./workflow-diagram.png)
@@ -84,7 +85,7 @@ gcloud functions delete YOUR_FUNCTION_NAME --gen2 --region REGION
 
 ```shell
 gcloud workflows deploy scan-workflow --source=workflow.yaml
-gcloud workflows executions list ${MY_WORKFLOW} --limit=5
+gcloud workflows executions list scan-workflow --limit=5
 gcloud workflows delete scan-workflow
 ```
 
@@ -125,12 +126,17 @@ gcloud beta run services logs read my-service --log-filter='timestamp<="2015-05-
 
 # References:
 
+- https://cloud.google.com/workflows/docs/overview
 - https://cloud.google.com/eventarc/docs/workflows/quickstart-storage#yaml
 - https://cloud.google.com/security/products/secret-manager
+- https://cloud.google.com/eventarc/docs
+- https://cloud.google.com/storage?hl=en
+- https://cloud.google.com/logging?hl=en
 - https://cloud.google.com/sdk/gcloud/reference/topic/gcloudignore
 
 ### Ruby libraries and information
 
+- https://www.ruby-lang.org/en/
 - https://googlecloudplatform.github.io/functions-framework-ruby/v1.4.1/index.html
 - https://bundler.io/
 - https://ruby.github.io/rake/doc/rakefile_rdoc.html
@@ -144,3 +150,4 @@ gcloud beta run services logs read my-service --log-filter='timestamp<="2015-05-
 ### Malware test file
 
 - https://www.eicar.org/download-anti-malware-testfile/
+- An empty file is considered 'good' in all cases.
