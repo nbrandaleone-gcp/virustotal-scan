@@ -35,14 +35,23 @@ def copy_file source_bucket_name:, source_file_name:, destination_bucket_name:, 
   unless [source_bucket_name, source_file_name, destination_bucket_name, destination_file_name].all?
     raise StandardError, "copy_file: 1 or more parameters are nil"
   end
-    
-  project_id = ENV['project_id']
-  storage = Google::Cloud::Storage.new(project_id: project_id)
-  bucket  = storage.bucket source_bucket_name, skip_lookup: true
-  file    = bucket.file source_file_name
 
-  destination_bucket = storage.bucket destination_bucket_name
-  destination_file   = file.copy destination_bucket.name, destination_file_name
+  begin
+    project_id = ENV['project_id']
+    storage = Google::Cloud::Storage.new(project_id: project_id)
+    bucket  = storage.bucket source_bucket_name, skip_lookup: true
+    destination_bucket = storage.bucket destination_bucket_name
+    file    = bucket.file source_file_name
+
+    if file.nil?
+      logger.info "ERROR: File does not exist in source bucket"
+      return
+    else
+      destination_file   = file.copy destination_bucket.name, destination_file_name
+    end
+  rescue
+    logger.info "ERROR: Could not copy file from source to destination bucket."
+  end
 end
 
 def delete_file bucket_name:, file_name:
@@ -54,17 +63,28 @@ def delete_file bucket_name:, file_name:
 
   project_id = ENV['project_id']
 
-  storage = Google::Cloud::Storage.new(project_id: project_id)
-  bucket  = storage.bucket bucket_name, skip_lookup: true
-  file    = bucket.file file_name
+  # TODO: If file does not exist. Cancel delete. Google::Cloud::NotFoundError:notFound:
+  begin
+    storage = Google::Cloud::Storage.new(project_id: project_id)
+    bucket  = storage.bucket bucket_name, skip_lookup: true
+    file    = bucket.file file_name
 
-  file.delete
+    if file.nil?
+      logger.info "ERROR: File does not exist in source bucket"
+      return
+    else
+      file.delete
+    end
+  rescue Google::Cloud::NotFoundError
+    logger.info "ERROR: File not found. Not possible to delete it"
+    end
 end
 
 def move_and_delete(sb, sf, db, df)
   copy_file(source_bucket_name: sb, source_file_name: sf, 
             destination_bucket_name: db, destination_file_name: df)
   delete_file(bucket_name: sb, file_name: sf)
+  logger.info "File: #{sf} moved from source: #{sb} -> destination: #{db}"
 end
 
 # We will receive a POST, with a JSON data blob
@@ -81,15 +101,17 @@ FunctionsFramework.http "gcs_move_file" do |request|
   score = score_p.to_i
 
   if score < 0                          # unknown status. Private Scan recommended
-    "File is unscanned. File left in original location."
+    logger.info "File is unscanned. File left in original location."
+    res = "File is unscanned. File left in original location."
   elsif score >= 0 && score < 3         # clean file
     move_and_delete(bucket, file, clean_bucket, file)
-    "File: #{file} copied from source: #{bucket} -> destination: #{clean_bucket}"
+    res = "File: #{file} moved from source: #{bucket} -> destination: #{clean_bucket}"
   elsif score >= 3                      # dangerous file
     move_and_delete(bucket, file, quarantine_bucket, file)
-    "File: #{file} copied from source: #{bucket} -> destination: #{quarantine_bucket}"
+    res = "File: #{file} moved from source: #{bucket} -> destination: #{quarantine_bucket}"
   else
     logger.info "ERROR: Score #{score} is not a valid number"
-    "Error determining score. File left in original location."
+    res = "Error determining score. File left in original location."
   end
+  res
 end

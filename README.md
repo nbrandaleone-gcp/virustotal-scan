@@ -141,6 +141,7 @@ gcloud beta run services logs read my-service --log-filter='timestamp<="2015-05-
 - https://www.ruby-lang.org/en/
 - https://googlecloudplatform.github.io/functions-framework-ruby/v1.4.1/index.html
 - https://bundler.io/
+- https://github.com/rbenv/rbenv
 - https://ruby.github.io/rake/doc/rakefile_rdoc.html
 - https://runfile.dannyb.co/
 - https://chrisseaton.com/truffleruby/

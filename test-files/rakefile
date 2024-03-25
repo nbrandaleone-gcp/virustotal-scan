@@ -1,4 +1,4 @@
-# rakfile
+# Rakfile
 
 desc "Run all tests"
 task default: %w[test:good test:bad test:unknown]

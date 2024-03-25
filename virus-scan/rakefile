@@ -1,4 +1,4 @@
-# rakfile
+# Rakfile
 
 desc "Default task"
 task :default do
