@@ -5,9 +5,6 @@ task :default do
   puts "default task is unassigned"
 end
 
-  desc "Reset test files, and test x3 logic paths (good, bad, unknown)"
-  task test: %w[test:clean test:quarantine test:unknown]
-
 desc "Deploy ruby app.rb <gcs_move_file> to Google Cloud Functions"
 task :deploy do
   sh "gcloud functions deploy ruby-move-file \
@@ -24,6 +21,9 @@ desc "Start local functions_framework server on port 8080"
 task :start do
   sh "bundle exec functions-framework-ruby --target gcs_move_file"
 end
+
+desc "Reset test files, and test x3 logic paths (good, bad, unknown)"
+task test: %w[test:clean test:quarantine test:unknown]
 
 namespace "test" do
   desc "Send 'empty-file.txt' to CF. Should be moved to clean bucket"

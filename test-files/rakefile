@@ -12,6 +12,7 @@ namespace "test" do
   desc "Copy 'good' file into primary bucket"
   task :good do
     sh "gsutil cp empty-file.txt gs://nbrandaleone-testing/"
+    sh "gsutil cp hello-world.txt gs://nbrandaleone-testing/"
   end
 
   desc "Copy 'unknown' file into primary bucket"
