@@ -61,6 +61,12 @@ def delete_file bucket_name:, file_name:
   file.delete
 end
 
+def move_and_delete(sb, sf, db, df)
+  copy_file(source_bucket_name: sb, source_file_name: sf, 
+            destination_bucket_name: db, destination_file_name: df)
+  delete_file(bucket_name: sb, file_name: sf)
+end
+
 # We will receive a POST, with a JSON data blob
 FunctionsFramework.http "gcs_move_file" do |request|
   message = "I received a request: #{request.request_method} #{request.url}"
@@ -75,18 +81,15 @@ FunctionsFramework.http "gcs_move_file" do |request|
   score = score_p.to_i
 
   if score < 0                          # unknown status. Private Scan recommended
-    "File is unscanned. Left in original location."
+    "File is unscanned. File left in original location."
   elsif score >= 0 && score < 3         # clean file
-    copy_file(source_bucket_name: bucket, source_file_name: file, 
-              destination_bucket_name: clean_bucket, destination_file_name: file)
-    delete_file(bucket_name: bucket, file_name: file)
+    move_and_delete(bucket, file, clean_bucket, file)
     "File: #{file} copied from source: #{bucket} -> destination: #{clean_bucket}"
   elsif score >= 3                      # dangerous file
-    copy_file(source_bucket_name: bucket, source_file_name: file, 
-            destination_bucket_name: quarantine_bucket, destination_file_name: file)
-    delete_file(bucket_name: bucket, file_name: file)
+    move_and_delete(bucket, file, quarantine_bucket, file)
     "File: #{file} copied from source: #{bucket} -> destination: #{quarantine_bucket}"
   else
-    logger.info "ERROR: Score not a valid number"
+    logger.info "ERROR: Score #{score} is not a valid number"
+    "Error determining score. File left in original location."
   end
 end
