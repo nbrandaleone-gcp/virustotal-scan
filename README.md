@@ -140,6 +140,7 @@ gcloud beta run services logs read my-service --log-filter='timestamp<="2015-05-
 ### Ruby libraries and information
 
 - https://www.ruby-lang.org/en/
+- https://rubystyle.guide/
 - https://googlecloudplatform.github.io/functions-framework-ruby/v1.4.1/index.html
 - https://bundler.io/
 - https://github.com/rbenv/rbenv
