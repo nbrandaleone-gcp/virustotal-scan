@@ -96,6 +96,9 @@ def move_and_delete(sb, sf, db, df)
   copy_file(source_bucket_name: sb, source_file_name: sf, 
             destination_bucket_name: db, destination_file_name: df)
   delete_file(bucket_name: sb, file_name: sf)
+  
+  # TODO: Should validate return codes, and pass sentinal downstream.
+  #       This would allow a response that acknowledges any errors encountered.
   logger.info "File: #{sf} moved from source: #{sb} -> destination: #{db}"
 end
 

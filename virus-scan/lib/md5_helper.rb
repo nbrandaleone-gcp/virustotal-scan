@@ -3,6 +3,8 @@
 # Helper functions converting Google Storage Bucket hash to format used by TotalVirus
 #
 
+require 'digest'
+
 # Not needed anymore, since we can get MD5 hash from Storage Bucket metadata
 # Generate MD5 hash for a local file
 def generate_hash(file)

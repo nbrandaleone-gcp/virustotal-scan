@@ -5,7 +5,7 @@ task :default do
   puts "default task is unassigned"
 end
 
-desc "Deploy ruby app.rb <gcs_move_file> to Google Cloud Functions"
+desc "Deploy ruby app.rb <ruby-virus-scan> to Google Cloud Functions"
 task :deploy do
   sh "gcloud functions deploy ruby-virus-scan \
     --gen2 \
@@ -26,6 +26,11 @@ desc "Reset test files, and test x3 logic paths (good, bad, unknown)"
 task test: %w[test:clean1 test:clean2 test:quarantine test:unknown]
 
 namespace "test" do
+  desc "Minitest testing suite"
+  task :mt do
+    sh "bundle exec ruby test/mini_test.rb"
+  end
+
   desc "Send 'empty-file.txt' to CF. Should be moved to clean bucket"
   task :clean1 do
     sh 'curl --ipv4 --header "Content-Type: application/json" \
@@ -63,5 +68,11 @@ namespace "logs" do
   desc "Stream logs of ruby-virus-scan CF"
   task :stream do
     sh "gcloud beta run services logs tail ruby-virus-scan"
+  end
+
+  desc "View logs of ruby-virus-scan CF. rake logs:view[<limit>]"
+  task :view, [:limit] do |_, args|
+    args.with_defaults(:limit => "10")
+    sh "gcloud functions logs read ruby-virus-scan --limit #{args[:limit]}"
   end
 end

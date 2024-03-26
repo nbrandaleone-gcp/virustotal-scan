@@ -8,15 +8,14 @@
 
 require "functions_framework"
 require "google/cloud/secret_manager"
-require "google/cloud/storage"
+# require "google/cloud/storage"
 
 require "addressable"
 require "logger"
-require "cgi"
+#require "cgi"
 require "json"
-require 'uri'
+#require 'uri'
 require 'net/http'
-require 'digest'
 require 'dotenv'
 
 FunctionsFramework.on_startup do
@@ -98,13 +97,13 @@ end
 FunctionsFramework.http "hello_http" do |request|
   # The request parameter is a Rack::Request object.
   # See https://www.rubydoc.info/gems/rack/Rack/Request
-
   message = "I received a request: #{request.request_method} #{request.url}"
   $log.info "#{message}. Body: #{request.body.read}"
   bucket  = (request.body.rewind && JSON.parse(request.body.read)["bucket"]  rescue nil)
   file    = (request.body.rewind && JSON.parse(request.body.read)["object"]  rescue nil)
   md5hash = (request.body.rewind && JSON.parse(request.body.read)["md5hash"] rescue nil)
 
+  # TODO: We should validate the input from the EventArc trigger
   md5 = get_md5(md5hash)
   vt_report = get_virustotal_report(md5)
   score = get_score(vt_report)
