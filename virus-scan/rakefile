@@ -58,3 +58,10 @@ namespace "test" do
       http://localhost:8080/'
   end
 end
+
+namespace "logs" do
+  desc "Stream logs of ruby-virus-scan CF"
+  task :stream do
+    sh "gcloud beta run services logs tail ruby-virus-scan"
+  end
+end

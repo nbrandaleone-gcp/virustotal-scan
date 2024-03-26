@@ -56,6 +56,7 @@ GEM
       base64
     logger (1.6.0)
     mini_mime (1.1.5)
+    minitest (5.22.3)
     multi_json (1.15.0)
     net-http (0.4.1)
       uri
@@ -89,6 +90,7 @@ DEPENDENCIES
   functions_framework (~> 1.4.1)
   google-cloud-storage (~> 1.49)
   logger (~> 1.6)
+  minitest (~> 5.22, >= 5.22.3)
 
 BUNDLED WITH
-   2.4.22
+   2.5.7

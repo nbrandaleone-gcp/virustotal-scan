@@ -1,6 +1,6 @@
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"bucket":"nbrandaleone-testing","object":"bad-file.txt","score":"1"}' \
+  --data '{"bucket":"nbrandaleone-testing","object":"hello-world.txt","score":"0"}' \
   http://localhost:8080/
 
 # Delete copied file, for repeated testing

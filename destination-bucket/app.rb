@@ -31,10 +31,14 @@ def copy_file source_bucket_name:, source_file_name:, destination_bucket_name:, 
 
   # The ID of the new GCS object
   # destination_file_name = "destination-file-name"
-
-  unless [source_bucket_name, source_file_name, destination_bucket_name, destination_file_name].all?
-    raise StandardError, "copy_file: 1 or more parameters are nil"
-  end
+  begin
+    unless [source_bucket_name, source_file_name, destination_bucket_name, destination_file_name].all?
+      raise StandardError, "copy_file: 1 or more parameters are nil"
+    end
+    rescue StandardError => e
+      puts e.message
+      return
+    end
 
   begin
     project_id = ENV['project_id']
@@ -63,7 +67,15 @@ def delete_file bucket_name:, file_name:
 
   project_id = ENV['project_id']
 
-  # TODO: If file does not exist. Cancel delete. Google::Cloud::NotFoundError:notFound:
+  begin
+    unless [bucket_name, file_name].all?
+      raise StandardError, "delete_file: 1 or more parameters are nil"
+    end
+  rescue StandardError => e
+    puts e.message
+    return
+  end
+    
   begin
     storage = Google::Cloud::Storage.new(project_id: project_id)
     bucket  = storage.bucket bucket_name, skip_lookup: true

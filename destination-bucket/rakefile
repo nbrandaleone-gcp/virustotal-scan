@@ -26,6 +26,11 @@ desc "Reset test files, and test x3 logic paths (good, bad, unknown)"
 task test: %w[test:clean test:quarantine test:unknown]
 
 namespace "test" do
+  desc "Minitest testing suite"
+  task :mt do
+    sh "bundle exec ruby test/mini_test.rb"
+  end
+
   desc "Send 'empty-file.txt' to CF. Should be moved to clean bucket"
   task :clean do
     sh 'curl --ipv4 --header "Content-Type: application/json" \
@@ -55,5 +60,12 @@ namespace "test" do
     sh "gsutil cp ../test-files/bad-file.txt gs://nbrandaleone-testing/"
     sh "gsutil cp ../test-files/aviation-weather.jpg gs://nbrandaleone-testing/"
     sh "gsutil cp ../test-files/empty-file.txt gs://nbrandaleone-testing/"
+  end
+end
+
+namespace "logs" do
+  desc "Stream logs of ruby-move-file CF"
+  task :stream do
+    sh "gcloud beta run services logs tail ruby-move-file"
   end
 end

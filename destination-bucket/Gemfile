@@ -4,3 +4,4 @@ gem "functions_framework", "~> 1.4.1"
 gem "google-cloud-storage", "~> 1.49"
 gem 'logger', '~> 1.6'
 gem 'dotenv', '~> 3.1.0'
+gem 'minitest', '~> 5.22', '>= 5.22.3'
