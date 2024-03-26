@@ -98,6 +98,7 @@ gcloud eventarc triggers create storage-events-trigger \
  --event-filters="bucket=nbrandaleone-testing" \
  --service-account="161156519703-compute@developer.gserviceaccount.com"
 
+gcloud eventarc triggers list
 gcloud eventarc triggers delete storage-events-trigger
 ```
 
