@@ -35,10 +35,10 @@ def copy_file source_bucket_name:, source_file_name:, destination_bucket_name:, 
     unless [source_bucket_name, source_file_name, destination_bucket_name, destination_file_name].all?
       raise StandardError, "copy_file: 1 or more parameters are nil"
     end
-    rescue StandardError => e
+  rescue StandardError => e
       puts e.message
       return
-    end
+  end
 
   begin
     project_id = ENV['project_id']
