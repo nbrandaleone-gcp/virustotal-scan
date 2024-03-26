@@ -63,8 +63,8 @@ gsutil hash -m gs://nbrandaleone-testing/bad-file.txt
 ```
 
 > [!WARNING]
-> Since the focus of this tutorial in on security, we shoudld adjust these CF to run authenticated.
-> We **MUST** use a Service Account with proper permissions!
+> Since the focus of this tutorial in on security, we should adjust these CF to run authenticated. They are currently public, with exposed endpoints.
+> We **MUST** use a Service Account with proper permissions, and close off Internet access!
 
 ## Deploy a Cloud Function
 
