@@ -81,6 +81,36 @@ gcloud functions deploy ruby-virus-scan \
 gcloud functions delete YOUR_FUNCTION_NAME --gen2 --region REGION
 ```
 
+### Use of environmental variables
+
+Both Cloud Functions reguire environmental variables in order to work.
+
+*ruby-virus-scan:*
+
+- project_id            # GCP project id
+- scret_id              # Secrets Manager secret nam/id
+
+*ruby-move-file*
+
+- project-id            # GCP project id
+- clean_bucket          # Name of Storage Bucket
+- quarantine_bucket     # Name of Storage Bucket
+
+These evironmental variables can be injected into the runtime environment at deploy time.
+Or, they can be written into a file called ".env" in the root directory of both functions.
+
+```shell
+# .env file
+project_id = "my_cloud_project"
+...
+```
+
+Or, via runtime injection:
+
+```shell
+gcloud functions deploy FUNCTION_NAME --set-env-vars FOO=bar,BAZ=boo FLAGS...
+```
+
 ## Create a Workflow
 
 ```shell
