@@ -90,7 +90,7 @@ Both Cloud Functions require environmental variables in order to work.
 | Env Variable | Purpose |
 | -------- | ------- |
 | project_id | GCP project id |
-| secret_id   | Secrets Manager secret name |
+| secret_id   | Secrets Manager id for TotalVirus API key |
 
 **ruby-move-file:**
 
