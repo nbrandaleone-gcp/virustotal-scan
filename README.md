@@ -87,14 +87,14 @@ Both Cloud Functions require environmental variables in order to work.
 
 **ruby-virus-scan:**
 
-| Variable | Purpose |
+| Env Variable | Purpose |
 | -------- | ------- |
 | project_id | GCP project id |
-| scret_id   | Secrets Manager secret name/id |
+| secret_id   | Secrets Manager secret name |
 
 **ruby-move-file:**
 
-| Variable | Purpose |
+| Env Variable | Purpose |
 | -------- | ------- |
 | project-id | GCP project id |
 | clean_bucket | Name of Storage Bucket |
