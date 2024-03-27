@@ -83,14 +83,14 @@ gcloud functions delete YOUR_FUNCTION_NAME --gen2 --region REGION
 
 ### Use of environmental variables
 
-Both Cloud Functions reguire environmental variables in order to work.
+Both Cloud Functions require environmental variables in order to work.
 
 *ruby-virus-scan:*
 
 - project_id            # GCP project id
 - scret_id              # Secrets Manager secret nam/id
 
-*ruby-move-file*
+*ruby-move-file:*
 
 - project-id            # GCP project id
 - clean_bucket          # Name of Storage Bucket
