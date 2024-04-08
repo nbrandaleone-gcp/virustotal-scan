@@ -38,7 +38,7 @@ $log.level = Logger::INFO  # (FATAL, ERROR, WARN, INFO, DEBUG)
 def get_secret_apikey
   project_id = ENV["project_id"]
   secret_id  = ENV["secret_id"]
-	version_id = "1"
+  version_id = ENV["version_id"] || "1"
   $log.debug "project_id: #{project_id}"
   $log.debug "secret_id: #{secret_id}"
 

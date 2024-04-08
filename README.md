@@ -91,6 +91,14 @@ Both Cloud Functions require environmental variables in order to work.
 | -------- | ------- |
 | project_id | GCP project id |
 | secret_id   | Secrets Manager id for TotalVirus API key |
+| version_id | Secrets Manager version number. Defaults to "1" |
+
+_Example_
+``` shell
+project_id = "my_project"
+secret_id = "my_secret"
+version_id = "1"
+```
 
 **ruby-move-file:**
 
@@ -99,6 +107,12 @@ Both Cloud Functions require environmental variables in order to work.
 | project-id | GCP project id |
 | clean_bucket | Name of Storage Bucket |
 | quarantine_bucket | Name of Storage Bucket |
+
+_Example_
+```shell
+clean_bucket = "my-bucket"
+quarantine_bucket = "bad-bucket"
+```
 
 These evironmental variables can be injected into the runtime environment at deploy time.
 Or, they can be written into a file called ".env" in the root directory of both functions.
