@@ -152,12 +152,6 @@ gcloud eventarc triggers create storage-events-trigger \
 gcloud eventarc triggers list
 ```
 
-## Test Cloud Functions locally (Ruby Functions Framework)
-
-```shell
-bundle exec functions-framework-ruby --target hello_http
-```
-
 ## View Google Logs
 
 ```shell
@@ -171,6 +165,38 @@ gcloud beta run services logs read my-service --log-filter='timestamp<="2015-05-
  gcloud beta run services logs read my-service --log-filter="textPayload:SearchText" --limit=10 --format=json
 
  gcloud beta run services logs tail SERVICE --project PROJECT-I
+```
+
+## Run Cloud Functions locally (Ruby Functions Framework)
+
+This is useful for local testing, and is a feature built in to the Functions Framework
+library.
+
+```shell
+bundle exec functions-framework-ruby --target hello_http
+```
+
+## Test using Rake
+
+I have created a variety of testing scripts, which are managed via several Rakefiles.
+Since these will have to be modified for your environment to be useful, I will
+only show what can be done.  It will be up to you to leverage the Rakefile
+if you decide to make code changes.
+
+```shell
+$ rake -T
+
+rake default           # Default task
+rake deploy            # Deploy ruby app.rb <ruby-virus-scan> to Google Cloud Functions
+rake logs:stream       # Stream logs of ruby-virus-scan CF
+rake logs:view[limit]  # View logs of ruby-virus-scan CF
+rake start             # Start local functions_framework server on port 8080
+rake test              # Reset test files, and test x3 logic paths (good, bad, unknown)
+rake test:clean1       # Send 'empty-file.txt' to CF
+rake test:clean2       # Send 'hello-world.txt' to CF
+rake test:mt           # Minitest testing suite
+rake test:quarantine   # Send 'bad-file.txt' to CF
+rake test:unknown      # Send un-scanned file to CF
 ```
 
 # Clean Up
