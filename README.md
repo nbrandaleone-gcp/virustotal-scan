@@ -52,7 +52,7 @@ gcloud secrets versions access version-id --secret="secret-id"
 
 ```shell
 # Create a bucket
-gsutil mb -c standard -l us-east1 gs://some-bucket
+gsutil mb -c standard -l us-central1 gs://some-bucket
 
 # File commands
 gsutil ls gs://nbrandaleone-testing
@@ -64,8 +64,11 @@ gsutil hash -m gs://nbrandaleone-testing/bad-file.txt
 > [!WARNING]
 > Since the focus of this tutorial in on security, we deploy the cloud functions
 > with internal access only. This secures the CF, so they can only be accessed from
-> within your GCP VPC.  We do not use Service Accounts, but that is an additional
-> method of securing your CFs that should be considered for any production workloads.
+> within your GCP VPC environment/network.  
+>
+> We do not use dedicated Service Accounts, but that is an 
+> additional method of securing your CFs that should be considered for any 
+> production workloads
 
 ## Deploy a Cloud Function
 
