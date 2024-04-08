@@ -6,7 +6,7 @@ appropriate Storage Buckets. Two Cloud Functions,
 written in [Ruby](https://www.ruby-lang.org/en/), do the various checks and API calls to VirusTotal in order
 to determine if the files are safe. Once a determination has been made,
 the file is moved into a "safe" or "quarantine" bucket. If we can't determine the status of the file,
-we leave the in the original bucket.
+we leave it in the original bucket.
 
 Workflow architecture:
 ![Architectural diagram](./workflow-diagram.png)
