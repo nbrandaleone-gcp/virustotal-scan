@@ -68,7 +68,7 @@ gsutil hash -m gs://nbrandaleone-testing/bad-file.txt
 >
 > We do not use dedicated Service Accounts, but that is an 
 > additional method of securing your CFs that should be considered for any 
-> production workloads
+> production workload
 
 ## Deploy a Cloud Function
 
