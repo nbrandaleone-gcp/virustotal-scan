@@ -51,9 +51,8 @@ gcloud secrets versions access version-id --secret="secret-id"
 ## Copy a file into a GCS bucket via CLI
 
 ```shell
-# Create/Delete a bucket
+# Create a bucket
 gsutil mb -c standard -l us-east1 gs://some-bucket
-gsutil rb [-f] gs://<bucket_name>...
 
 # File commands
 gsutil ls gs://nbrandaleone-testing
@@ -63,8 +62,10 @@ gsutil hash -m gs://nbrandaleone-testing/bad-file.txt
 ```
 
 > [!WARNING]
-> Since the focus of this tutorial in on security, we should adjust these CF to run authenticated. They are currently public, with exposed endpoints.
-> We **MUST** use a Service Account with proper permissions, and close off Internet access!
+> Since the focus of this tutorial in on security, we deploy the cloud functions
+> with internal access only. This secures the CF, so they can only be accessed from
+> within your GCP VPC.  We do not use Service Accounts, but that is an additional
+> method of securing your CFs that should be considered for any production workloads.
 
 ## Deploy a Cloud Function
 
@@ -76,9 +77,8 @@ gcloud functions deploy ruby-virus-scan \
 --entry-point=hello_http \
 --source=. \
 --trigger-http \
+--ingress-settings=internal-only \
 --allow-unauthenticated
-
-gcloud functions delete YOUR_FUNCTION_NAME --gen2 --region REGION
 ```
 
 ### Use of environmental variables
@@ -134,7 +134,7 @@ gcloud functions deploy FUNCTION_NAME --set-env-vars FOO=bar,BAZ=boo FLAGS...
 ```shell
 gcloud workflows deploy scan-workflow --source=workflow.yaml
 gcloud workflows executions list scan-workflow --limit=5
-gcloud workflows delete scan-workflow
+
 ```
 
 ## Create an EventArc trigger
@@ -147,7 +147,6 @@ gcloud eventarc triggers create storage-events-trigger \
  --service-account="161156519703-compute@developer.gserviceaccount.com"
 
 gcloud eventarc triggers list
-gcloud eventarc triggers delete storage-events-trigger
 ```
 
 ## Test Cloud Functions locally (Ruby Functions Framework)
@@ -169,6 +168,24 @@ gcloud beta run services logs read my-service --log-filter='timestamp<="2015-05-
  gcloud beta run services logs read my-service --log-filter="textPayload:SearchText" --limit=10 --format=json
 
  gcloud beta run services logs tail SERVICE --project PROJECT-I
+```
+
+# Clean Up
+
+Here are some commands to delete all the resources that we created:
+
+```shell
+# Cloud Functions
+gcloud functions delete YOUR_FUNCTION_NAME --gen2 --region REGION
+
+# Workflows
+gcloud workflows delete scan-workflow
+
+# Eventarc
+gcloud eventarc triggers delete storage-events-trigger
+
+# Delete a Storage Bucket
+gsutil rb [-f] gs://<bucket_name>...
 ```
 
 ---
