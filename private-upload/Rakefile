@@ -1,0 +1,78 @@
+# Rakfile
+
+desc "Default task"
+task :default do
+  puts "default task is unassigned"
+end
+
+desc "Deploy ruby app.rb <ruby-virus-scan> to Google Cloud Functions"
+task :deploy do
+  sh "gcloud functions deploy ruby-virus-scan \
+    --gen2 \
+    --runtime=ruby32 \
+    --region=us-central1 \
+    --entry-point=hello_http \
+    --source=. \
+    --trigger-http \
+    --allow-unauthenticated"
+end
+
+desc "Start local functions_framework server on port 8080"
+task :start do
+  sh "bundle exec functions-framework-ruby --target hello_http"
+end
+
+desc "Reset test files, and test x3 logic paths (good, bad, unknown)"
+task test: %w[test:clean1 test:clean2 test:quarantine test:unknown]
+
+namespace "test" do
+  desc "Minitest testing suite"
+  task :mt do
+    sh "bundle exec ruby test/mini_test.rb"
+  end
+
+  desc "Send 'empty-file.txt' to CF. Should be moved to clean bucket"
+  task :clean1 do
+    sh 'curl --ipv4 --header "Content-Type: application/json" \
+      --request POST \
+      --data \'{"bucket":"nbrandaleone-testing","md5hash":"1B2M2Y8AsgTpgAmY7PhCfg==","object":"empty-file.txt"}\' \
+      http://localhost:8080/'
+  end
+  
+  desc "Send 'hello-world.txt' to CF. Should be moved to clean bucket"
+  task :clean2 do
+    sh 'curl --ipv4 --header "Content-Type: application/json" \
+      --request POST \
+      --data \'{"bucket":"nbrandaleone-testing","md5hash":"kQyLxzEQsM0bxdK8rnglEQ==","object":"hello-world.txt"}\' \
+      http://localhost:8080/'
+  end
+  
+  desc "Send 'bad-file.txt' to CF. Should be moved to quarantine bucket"
+  task :quarantine do
+    sh 'curl --ipv4 --header "Content-Type: application/json" \
+      --request POST \
+      --data \'{"bucket":"nbrandaleone-testing","object":"bad-file.txt","md5hash":"aWMORXTsZ5gjmwkc2kPcoA=="}\' \
+      http://localhost:8080/'
+  end
+
+  desc "Send un-scanned file to CF. Should be left as is"
+  task :unknown do
+    sh 'curl --ipv4 --header "Content-Type: application/json" \
+      --request POST \
+      --data \'{"bucket":"nbrandaleone-testing","object":"aviation-weather.jpg","md5hash":"BGCeiSs/psdhpKe0nY9ntA=="}\' \
+      http://localhost:8080/'
+  end
+end
+
+namespace "logs" do
+  desc "Stream logs of ruby-virus-scan CF"
+  task :stream do
+    sh "gcloud beta run services logs tail ruby-virus-scan"
+  end
+
+  desc "View logs of ruby-virus-scan CF. rake logs:view[<limit>]"
+  task :view, [:limit] do |_, args|
+    args.with_defaults(:limit => "10")
+    sh "gcloud functions logs read ruby-virus-scan --limit #{args[:limit]}"
+  end
+end
