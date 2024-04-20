@@ -5,16 +5,31 @@ task :default do
   puts "default task is unassigned"
 end
 
-desc "Deploy ruby app.rb <ruby-virus-scan> to Google Cloud Functions"
+desc "Deploy ruby app.rb <ruby-private-upload> to Google Cloud Functions"
 task :deploy do
-  sh "gcloud functions deploy ruby-virus-scan \
+  sh "gcloud functions deploy ruby-private-upload \
     --gen2 \
+    --memory=1024MB \
+    --cpu=1 \
     --runtime=ruby32 \
     --region=us-central1 \
     --entry-point=hello_http \
     --source=. \
     --trigger-http \
-    --allow-unauthenticated"
+    --allow-unauthenticated" 
+end
+
+desc "Add GCS bucket as a volume to a Cloud Run service"
+task :addv do
+  sh "gcloud beta run services update ruby-private-upload \
+    --execution-environment gen2 \
+    --add-volume name=my-vol,type=cloud-storage,bucket=nbrandaleone-testing \
+    --add-volume-mount volume=my-vol,mount-path=/bucket"
+end
+
+desc "Terminate and delete Cloud Function"
+task :delete do
+  sh "gcloud functions delete ruby-private-upload"
 end
 
 desc "Start local functions_framework server on port 8080"
