@@ -97,17 +97,16 @@ def private_upload(file)
        
       response = request.execute 
       # Response.body is a string. https://www.rubydoc.info/gems/rest-client/2.1.0/RestClient/Response
-      data_type  = JSON.parse(response.body)["data"]["type"]
-      data_id    = JSON.parse(response.body)["data"]["id"]
+      #data_id    = JSON.parse(response.body)["data"]["id"]
       links_self = JSON.parse(response.body)["data"]["links"]["self"]
       
       # Debugger
       # binding.irb
       
   rescue RestClient::ExceptionWithResponse => e
-      warn "Error connecting to Virus Total."
-      warn "HTTP status code #{e.response.code}"
-      warn "Error message: #{e.response.body}"
+      logger.info "Error connecting to Virus Total."
+      logger.info "HTTP status code #{e.response.code}"
+      logger.info "Error message: #{e.response.body}"
   end
   
   # Return link to check on scan status
@@ -123,14 +122,15 @@ def check_vt(url)
   headers = { Accept: 'application/json', 'x-apikey': apikey }
   
   res = RestClient.get(url, headers)
-  links_self = JSON.parse(res.body)["data"]["links"]["self"]
+  # TODO: test JSON failure. Should I add rescue to all checks?
+  #links_self = JSON.parse(res.body)["data"]["links"]["boohoofalsetest"]
   scan_status = JSON.parse(res.body)["data"]["attributes"]["status"]
   file_sha256 = JSON.parse(res.body)["meta"]["file_info"]["sha256"] rescue nil
   
   if DEBUG
     #logger.debug res
-    puts "check_vt. scan_status is: #{scan_status}"  # will be "queued", "in-progress", "completed"
-    puts "check_vt. SHA256 is: #{file_sha256}"
+    logger.debug "check_vt. scan_status is: #{scan_status}"  # will be "queued", "in-progress", "completed"
+    #logger.debug "check_vt. SHA256 is: #{file_sha256}"
   end
   
   if scan_status == "completed" 
