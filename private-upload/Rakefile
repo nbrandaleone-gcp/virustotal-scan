@@ -37,6 +37,12 @@ task :start do
   sh "bundle exec functions-framework-ruby --target hello_http"
 end
 
+# Similar Ruby gem called https://github.com/filewatcher/filewatcher
+desc "Restart server when app.rb has been changed"
+task :restart do
+  sh 'watchexec -e rb -r "bundle exec functions-framework-ruby --target hello_http"'
+end
+
 desc "Reset test files, and test x3 logic paths (good, bad, unknown)"
 task test: %w[test:clean1 test:clean2 test:quarantine test:unknown]
 
@@ -77,17 +83,33 @@ namespace "test" do
       --data \'{"bucket":"nbrandaleone-testing","object":"aviation-weather.jpg","md5hash":"BGCeiSs/psdhpKe0nY9ntA=="}\' \
       http://localhost:8080/'
   end
+
+  desc "Send unscanned image file to private upload Cloud Function"
+  task :private do
+    sh 'curl --ipv4 --header "Content-Type: application/json" \
+      --request POST \
+      --data \'{"bucket":"nbrandaleone-testing","object":"aviation-weather.jpg"}\' \
+      "https://ruby-private-upload-yspciwmbia-uc.a.run.app/"'
+  end
+
+  desc "Send unscanned image file to local private upload app.rb"
+  task :pt do
+    sh 'curl --ipv4 --header "Content-Type: application/json" \
+      --request POST \
+      --data \'{"bucket":"nbrandaleone-testing","object":"aviation-weather.jpg"}\' \
+      http://localhost:8080/'
+  end
 end
 
 namespace "logs" do
   desc "Stream logs of ruby-virus-scan CF"
   task :stream do
-    sh "gcloud beta run services logs tail ruby-virus-scan"
+    sh "gcloud beta run services logs tail ruby-private-upload"
   end
 
   desc "View logs of ruby-virus-scan CF. rake logs:view[<limit>]"
   task :view, [:limit] do |_, args|
     args.with_defaults(:limit => "10")
-    sh "gcloud functions logs read ruby-virus-scan --limit #{args[:limit]}"
+    sh "gcloud functions logs read ruby-private-upload --limit #{args[:limit]}"
   end
 end
