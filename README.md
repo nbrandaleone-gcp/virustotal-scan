@@ -31,12 +31,12 @@ Cloud Functions are meant to be small chunks of code that are typical event-driv
 
 # Setup environment
 
-0. Update .env file with project_id, secret manager key name and Google Storage Bucket names
-1. Add VirusTotal API key into [Google Secrets Manager](https://cloud.google.com/security/products/secret-manager)
-2. Create x3 Cloud Storage Buckets for project
-3. Deploy Cloud Functions
-4. Deploy Workflows
-5. Create EventArc trigger to start Workflow
+1. Update .env file with project_id, secret manager key name and Google Storage Bucket names
+2. Add VirusTotal API key into [Google Secrets Manager](https://cloud.google.com/security/products/secret-manager)
+3. Create x3 Cloud Storage Buckets for project
+4. Deploy Cloud Functions
+5. Deploy Workflows
+6. Create EventArc trigger to start Workflow
 
 ## Gotchas
 
