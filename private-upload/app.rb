@@ -12,17 +12,14 @@ require "functions_framework"
 require "google/cloud/storage"
 require "google/cloud/secret_manager"
 
-#require 'uri'
-require 'net/http'
+#require 'net/http'
 require "rest-client"   # https://github.com/rest-client/rest-client
 require "json"
 require 'dotenv'
 
 # Moving all init code into `on_startup' block
 FunctionsFramework.on_startup do
-  require_relative "lib/md5_helper"
-
-  puts('Starting application private-upload ...')
+  logger.info('Starting application private-upload ...')
 
   # Dotenv - loads environmental variables.
   # Intended for Development only. However, due to Cloud Function lifecycle,
@@ -83,7 +80,7 @@ def private_upload(file)
 	apikey = get_secret_apikey()
 	headers = { Accept: 'application/json', 'x-apikey': apikey }
   begin
-      request = RestClient::Request.new({
+      request = RestClient::Request.new({   # RestClient.post(...)
         :method => :post,
         :url => url,
         :payload => {
@@ -97,9 +94,7 @@ def private_upload(file)
        
       response = request.execute 
       # Response.body is a string. https://www.rubydoc.info/gems/rest-client/2.1.0/RestClient/Response
-      #data_id    = JSON.parse(response.body)["data"]["id"]
-      links_self = JSON.parse(response.body)["data"]["links"]["self"]
-      
+      links_self = JSON.parse(response.body)["data"]["links"]["self"] 
       # Debugger
       # binding.irb
       
@@ -122,17 +117,18 @@ def check_vt(url)
   headers = { Accept: 'application/json', 'x-apikey': apikey }
   
   res = RestClient.get(url, headers)
-  # TODO: test JSON failure. Should I add rescue to all checks?
-  #links_self = JSON.parse(res.body)["data"]["links"]["boohoofalsetest"]
-  scan_status = JSON.parse(res.body)["data"]["attributes"]["status"]
+  # FIXME: test JSON failure. Should I add rescue to all checks?
+  #links_item = JSON.parse(res.body)["data"]["links"]["item"]
+  scan_status = JSON.parse(res.body)["data"]["attributes"]["status"] rescue nil
   file_sha256 = JSON.parse(res.body)["meta"]["file_info"]["sha256"] rescue nil
   
   if DEBUG
     #logger.debug res
-    logger.debug "check_vt. scan_status is: #{scan_status}"  # will be "queued", "in-progress", "completed"
     #logger.debug "check_vt. SHA256 is: #{file_sha256}"
+    logger.debug "check_vt. scan_status is: #{scan_status}"  
   end
   
+  # scan_status will be "queued", "in-progress" or "completed"
   if scan_status == "completed" 
     return true, file_sha256
   else 
@@ -142,30 +138,57 @@ end
 
 # Get the private scan report. Requires the files SHA-256 as the file ID.
 # https://docs.virustotal.com/reference/private-files-info
-def get_report(sha256)  
+def get_report(sha256)
+  if sha256.nil?  # This is checked in the main function as well. Belt and Suspenders.
+    logger.info "SHA256 is nil. Exiting ..."
+    exit(1)
+  end
+  
+  # It is also possible to generate SHA256 with the following 2 lines
+  # require 'digest'
+  # Digest::SHA256.hexdigest 'abc'        # => "ba7816bf8..."
+  
   #url = "https://www.virustotal.com/api/v3/private/files/{id}"
   url = "https://www.virustotal.com/api/v3/private/files/" + sha256
   apikey = get_secret_apikey()
   headers = { Accept: 'application/json', 'x-apikey': apikey }
   
   res = RestClient.get(url, headers)
-  verdict = JSON.parse(res.body)["data"]["attributes"]["threat_verdict"] rescue nil
-  
-  verdict
+  JSON.parse(res.body)["data"]["attributes"]["threat_verdict"] rescue nil
 end
 
 def download_file(bucket, object)
   project_id = ENV["project_id"]
+  
+  begin
+    unless [project_id, bucket, object].all?
+      raise StandardError, "download_file: 1 or more parameters are nil"
+    end
+  rescue StandardError => e
+    logger.info e.message
+    exit(1)
+  end
+  
   storage = Google::Cloud::Storage.new(
     project_id: project_id
   )
-  bucket = storage.bucket bucket
-  file = bucket.file object
+  my_bucket = storage.bucket bucket
   
-  if false # change to DEBUG if required
-    logger.debug "file is: #{object}"
-    logger.debug "md5 is: #{file.md5()}"
-    logger.debug "size is: #{file.size}"
+  if my_bucket.nil?
+    logger.info "ERROR. download_file. Bucket #{bucket} does not exist"
+    exit(1)
+  end
+  
+  file = my_bucket.file object
+  if file.nil?
+    logger.info "ERROR. download_file. File #{object} does not exist in bucket #{bucket}."
+    exit(1)
+  end
+  
+  # Check to see if the file is under 32 MB in size
+  if file.size > 30_000_000 # Approx 32 MB in bytes
+    logger.info "ERROR. file size is too large to copy. Size: #{file.size}"
+    exit(1)
   end
   
   # Copy file from bucket to local filesystem
@@ -174,7 +197,7 @@ def download_file(bucket, object)
   file_path
 end
 
-FunctionsFramework.http "hello_http" do |request|
+FunctionsFramework.http "private_upload" do |request|
   # FunctionFramework has a global logger object, and local logger object
   # request.body is an I/O object, not a string. Thus, the rewind method
   message = "I received a request: #{request.request_method} from #{request.url}"
@@ -186,7 +209,10 @@ FunctionsFramework.http "hello_http" do |request|
   file_path = download_file(bucket, file)
   status_link = private_upload(file_path)
   
-  i = 0   # Loop up to 50 minutes, waiting for scan to be completed
+  # Sleep up to 50 minutes, waiting for scan to be completed
+  # NOTE: Google Workflows has a  30 minute maximum timeout (5 minute default).
+  # NOTE: Other architectures (callbacks, polling) allow for greater timeouts. 
+  i = 0   
   while i < 10
     status, file_sha256 = check_vt(status_link)
     status ? break : i += 1
@@ -194,12 +220,13 @@ FunctionsFramework.http "hello_http" do |request|
   end
   
   # Get scan results
-  # verdict can be: VERDICT_UNDETECTED, 
+  # verdict can be: VERDICT_UNDETECTED, VERDICT_SUSPICIOUS, VERDICT_MALICIOUS
   verdict = "Threat Analysis failed"
   unless file_sha256.nil?
     verdict = get_report(file_sha256)
     logger.info verdict
   end
   
+  # FIXME: Return result with artificial score, and kick off move function
   { 'threat_verdict': verdict }
 end

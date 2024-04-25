@@ -8,40 +8,52 @@
 
 require "functions_framework"
 require "google/cloud/secret_manager"
-# require "google/cloud/storage"
 
 require "addressable"
 require "logger"
-#require "cgi"
 require "json"
-#require 'uri'
 require 'net/http'
 require 'dotenv'
 
 FunctionsFramework.on_startup do
   require_relative "lib/md5_helper"
-end
-
-# TODO: Proper function comments using 
-
-puts('Starting application....')
-
-# Dotenv - loads environmental variables.
-# Intended for Development only. However, due to Cloud Function lifecycle,
-# which forces a rebuild during every deploy, it can work in Production as well.
-Dotenv.load 
-
-$log = Logger.new(STDOUT)
-$log.level = Logger::INFO  # (FATAL, ERROR, WARN, INFO, DEBUG)
+  
+  logger.info('Starting application virus-scan ...')
+  
+  # Dotenv - loads environmental variables.
+  # Intended for Development only. However, due to Cloud Function lifecycle,
+  # which forces a rebuild during every deploy, it can work in Production as well.
+  Dotenv.load 
+  
+  # Any value will make DEBUG true.
+  DEBUG = ENV["DEBUG"] || false
+  if DEBUG
+    logger.debug!
+    logger.debug "DEBUG is true"  # warn is a Kernel method, shortcut for STDERR
+  else
+    logger.info "DEBUG is false"
+  end
+end 
 
 # Get VirusTotal API key securely via Google Secrets Manager
 def get_secret_apikey
   project_id = ENV["project_id"]
   secret_id  = ENV["secret_id"]
   version_id = ENV["version_id"] || "1"
-  $log.debug "project_id: #{project_id}"
-  $log.debug "secret_id: #{secret_id}"
-
+  if DEBUG
+    logger.debug "project_id: #{project_id}"
+    logger.debug "secret_id: #{secret_id}"
+  end
+  
+  begin
+    unless [project_id, secret_id].all?
+      raise StandardError, "get_secret_apikey: 1 or more parameters are nil"
+    end
+  rescue StandardError => e
+    logger.info e.message
+    exit(1)
+  end
+  
 	# Create a Secret Manager client.
 	client = Google::Cloud::SecretManager.secret_manager_service
 
@@ -56,7 +68,7 @@ def get_secret_apikey
 	begin
 		version = client.access_secret_version name: name
 	rescue
-		$log.debug "ERROR: Can't access Google Secrets Manager. Terminating..."
+		logger.info "ERROR: Can't access Google Secrets Manager. Terminating..."
 		exit(1)
 	end
 
@@ -74,8 +86,8 @@ def get_virustotal_report(file_hash)
 	  res = Net::HTTP.get_response(uri, headers)
 	  res.body
 	rescue Exception => error
-		$log.debug "Error connecting to Virus Total."
-    warn error.message
+		logger.info "Error connecting to Virus Total."
+    logger.info error.message
 	end
 end
 
@@ -84,11 +96,11 @@ def get_score(vt_report)
   begin
     json = JSON.parse(vt_report)
     score = json['data']['attributes']['last_analysis_stats']['malicious']
-    $log.debug "Malicious score: #{score}"
+    logger.info "Malicious score: #{score}"
     score
   rescue => e
-    warn "Unable to parse JSON"
-    warn e
+    logger.info "Unable to parse JSON. Scoring as '-1'."
+    logger.info e
     -1      # flag indicating not able to parse. Most likely unknown to VirusTotal
   end
 end
@@ -98,16 +110,15 @@ FunctionsFramework.http "hello_http" do |request|
   # The request parameter is a Rack::Request object.
   # See https://www.rubydoc.info/gems/rack/Rack/Request
   message = "I received a request: #{request.request_method} #{request.url}"
-  $log.info "#{message}. Body: #{request.body.read}"
+  logger.info "#{message}. Body: #{request.body.read}"
   bucket  = (request.body.rewind && JSON.parse(request.body.read)["bucket"]  rescue nil)
   file    = (request.body.rewind && JSON.parse(request.body.read)["object"]  rescue nil)
   md5hash = (request.body.rewind && JSON.parse(request.body.read)["md5hash"] rescue nil)
 
-  # TODO: We should validate the input from the EventArc trigger
   md5 = get_md5(md5hash)
   vt_report = get_virustotal_report(md5)
   score = get_score(vt_report)
-  $log.info "Bucket: #{bucket}, File: #{file}, MD5: #{md5}, Score: #{score}"
+  logger.info "Bucket: #{bucket}, File: #{file}, MD5: #{md5}, Score: #{score}"
 
   { 'bucket': bucket, 'object': file, 'score': score.to_s }
 end

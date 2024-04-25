@@ -27,6 +27,25 @@
         - extract_score:
             assign:
               - score: ${api_response1.body.score}
+        - where_to_jump:
+            switch:
+                - condition: ${int(score) < 0}
+                  next: private_scan
+                - condition: ${int(score) >= 0}
+                  next: move_file
+            next: end
+        - private_scan:
+            call: http.post
+            args:
+              url: https://ruby-private-upload-yspciwmbia-uc.a.run.app
+              body:
+                bucket: ${bucket}
+                object: ${object}
+              timeout: 1800
+            result: verdict
+            next: return_verdict
+        - return_verdict:
+            return: ${verdict.body}
         - move_file:
             call: http.post
             args:

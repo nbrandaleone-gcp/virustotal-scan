@@ -3,15 +3,15 @@
 desc "Run all tests"
 task default: %w[test:good test:bad test:unknown]
 
-namespace "worflows" do
+namespace "workflows" do
   desc "Deploy to Workflows"
-  task :workflow do
-    sh "gcloud workflows deploy scan-deploy --source=workflow.yaml"
+  task :deploy do
+    sh "gcloud workflows deploy scan-workflow --source=workflow.yaml"
   end
   
   desc "Delete Workflows"
   task :rm do
-    sh "gcloud workflows delete scan-deploy"
+    sh "gcloud workflows delete scan-workflow"
   end
 end
 

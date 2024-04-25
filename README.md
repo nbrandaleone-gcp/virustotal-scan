@@ -1,18 +1,26 @@
 # README.md
 
 This repo contains code and directions to set up a Google Cloud [Workflows](https://cloud.google.com/workflows?hl=en),
-that integrates with [VirusTotal](https://www.virustotal.com/gui/home/upload) to scan files, and move them into
-appropriate Storage Buckets. Two Cloud Functions,
-written in [Ruby](https://www.ruby-lang.org/en/), do the various checks and API calls to VirusTotal in order
-to determine if the files are safe. Once a determination has been made,
-the file is moved into a "safe" or "quarantine" bucket. If we can't determine the status of the file,
-we leave it in the original bucket.
+that integrates with [VirusTotal](https://www.virustotal.com/gui/home/upload) to scan files,
+and move them into appropriate Storage Buckets. Three Cloud Functions,
+written in [Ruby](https://www.ruby-lang.org/en/), do the various checks and API calls to
+VirusTotal in order to determine if the files are safe. Once a determination has been made,
+the file is moved into a "safe" or "quarantine" bucket. If we can't determine the status 
+of the file, we leave it in the original bucket.
+
+A third CF has been recently added to the workflow.  If the scan using the public
+VirusTotal endpoint fails (i.e. the signature is new and not yet in the public DB),
+we then initiate a scan using the private API. Once a determination has been made,
+the file is moved to the appropriate bucket. The private API requires a *paid* subscription
+to VirusTotal.  If you do not have access to the private endpoints, simply skip
+the deployment of the third Cloud Function.  The workflows logic will have to be
+modified to ignore this function.
 
 Workflow architecture:
 ![Architectural diagram](./workflow-diagram.png)
 
 > [!NOTE]
-> This workflow assumes that the file in question has already been uploaded and scanned by VirusTotal. We are then moving the file into a bucket based upon the results of the scan. IRL, one should check to see if the file has been scanned, and if it has not, then upload it to the VirusTotal website. After some time (usually minutes), the results will become available.
+> The diagram does not reflect the addition of the third Cloud Function into the workflow.
 
 ## Cloud Functions and Functions Framework
 
@@ -35,7 +43,6 @@ Cloud Functions are meant to be small chunks of code that are typical event-driv
 - The Cloud Functions Service Account key must have permissions to read from Secrets Manager.
 - The Cloud Functions Service Account key must also have permissions to read from an EventArc trigger (eventarc.eventReceive) and execute a Workflow (workflows.invoker).
 - You must get your own Virus Total API key. A personal key can be obtained for free, but will have feature and traffic limitations.
-- Ensure that your Google Cloud Storage Buckets are private, closed to Internet prying.
 
 # How to:
 
@@ -62,13 +69,13 @@ gsutil hash -m gs://nbrandaleone-testing/bad-file.txt
 ```
 
 > [!WARNING]
-> Since the focus of this tutorial in on security, we deploy the cloud functions
-> with internal access only. This secures the CF, so they can only be accessed from
-> within your GCP VPC environment/network.  
+> Since this tutorial in educational in nature, I do not employ
+> all recommended security practices. For production workloads, I would
+> strongly recommend the following additional steps:
 >
-> We do not use dedicated Service Accounts, but that is an 
-> additional method of securing your CFs that should be considered for any 
-> production workload
+> 1. Secures your CFs by deploying them with internal network access only.
+> 2. Use dedicated Service Accounts with least priviledges required for your CFs.
+> 3. Ensure your Storage Buckets are private and not open to anonymous Internet access.
 
 ## Deploy a Cloud Function
 
@@ -95,6 +102,7 @@ Both Cloud Functions require environmental variables in order to work.
 | project_id | GCP project id |
 | secret_id   | Secrets Manager id for TotalVirus API key |
 | version_id | Secrets Manager version number. Defaults to "1" |
+| DEBUG | false |
 
 _Example_
 ``` shell
@@ -110,6 +118,7 @@ version_id = "1"
 | project-id | GCP project id |
 | clean_bucket | Name of Storage Bucket |
 | quarantine_bucket | Name of Storage Bucket |
+| DEBUG | false |
 
 _Example_
 ```shell
@@ -117,8 +126,16 @@ clean_bucket = "my-bucket"
 quarantine_bucket = "bad-bucket"
 ```
 
+**ruby-private-upload:**
+| Env Variable | Purpose |
+| -------- | ------- |
+| project_id | GCP project id |
+| secret_id   | Secrets Manager id for TotalVirus API key |
+| version_id | Secrets Manager version number. Defaults to "1" |
+| DEBUG | false |
+
 These evironmental variables can be injected into the runtime environment at deploy time.
-Or, they can be written into a file called ".env" in the root directory of both functions.
+Or, they can be written into a file called ".env" in the CF root directory.
 
 ```shell
 # .env file
@@ -242,10 +259,12 @@ gsutil rb [-f] gs://<bucket_name>...
 - https://minitest.rubystyle.guide/#introduction
 - https://runfile.dannyb.co/
 - https://chrisseaton.com/truffleruby/
+- [How to get started with Logging in Ruby](https://betterstack.com/community/guides/logging/how-to-view-and-configure-ruby-logs/#log-levels-in-ruby)
 
 ### Workflows cheat-sheet
 
 - https://cloud.google.com/workflows/docs/reference/syntax/syntax-cheat-sheet
+- [Dealing with Workflows timeout issues](https://medium.com/google-cloud/long-running-http-calls-with-gcp-workflows-the-theory-cad54bae6fdd)
 
 ### Malware test file
 

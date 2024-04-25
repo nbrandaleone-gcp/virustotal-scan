@@ -9,11 +9,10 @@ desc "Deploy ruby app.rb <ruby-private-upload> to Google Cloud Functions"
 task :deploy do
   sh "gcloud functions deploy ruby-private-upload \
     --gen2 \
-    --memory=1024MB \
-    --cpu=1 \
     --runtime=ruby32 \
+    --timeout=3600 \
     --region=us-central1 \
-    --entry-point=hello_http \
+    --entry-point=private_upload \
     --source=. \
     --trigger-http \
     --allow-unauthenticated" 
