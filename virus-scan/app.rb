@@ -100,7 +100,7 @@ def get_score(vt_report)
     score
   rescue => e
     logger.info "Unable to parse JSON. Scoring as '-1'."
-    logger.info e
+    logger.debug e
     -1      # flag indicating not able to parse. Most likely unknown to VirusTotal
   end
 end

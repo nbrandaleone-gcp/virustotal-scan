@@ -139,7 +139,7 @@ end
 # Get the private scan report. Requires the files SHA-256 as the file ID.
 # https://docs.virustotal.com/reference/private-files-info
 def get_report(sha256)
-  if sha256.nil?  # This is checked in the main function as well. Belt and Suspenders.
+  if sha256.nil?
     logger.info "SHA256 is nil. Exiting ..."
     exit(1)
   end
@@ -210,7 +210,7 @@ FunctionsFramework.http "private_upload" do |request|
   status_link = private_upload(file_path)
   
   # Sleep up to 50 minutes, waiting for scan to be completed
-  # NOTE: Google Workflows has a  30 minute maximum timeout (5 minute default).
+  # NOTE: Google Workflows has a 30 minute maximum timeout (5 minute default).
   # NOTE: Other architectures (callbacks, polling) allow for greater timeouts. 
   i = 0   
   while i < 10
@@ -222,11 +222,16 @@ FunctionsFramework.http "private_upload" do |request|
   # Get scan results
   # verdict can be: VERDICT_UNDETECTED, VERDICT_SUSPICIOUS, VERDICT_MALICIOUS
   verdict = "Threat Analysis failed"
-  unless file_sha256.nil?
-    verdict = get_report(file_sha256)
-    logger.info verdict
-  end
+  verdict = get_report(file_sha256)
   
-  # FIXME: Return result with artificial score, and kick off move function
-  { 'threat_verdict': verdict }
+  # Return bucket, file and score.
+  if verdict == "VERDICT_UNDETECTED"  # Safe, or at least not known to be bad
+    res = { 'bucket': bucket, 'object': file, 'score': "1" }
+  else
+    res = { 'bucket': bucket, 'object': file, 'score': "10" } # suspicious or bad
+  end
+  logger.info "Verdict is: #{verdict}"
+  logger.info "Result is: #{res}"
+  
+  res
 end

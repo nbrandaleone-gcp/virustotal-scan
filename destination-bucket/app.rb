@@ -58,6 +58,7 @@ def copy_file source_bucket_name:, source_file_name:, destination_bucket_name:, 
     exit(1)
   else
     destination_file   = file.copy destination_bucket.name, destination_file_name
+    logger.info "Copying file: #{source_file_name} from bucket: #{source_bucket_name} to bucket: #{destination_bucket_name}"
   end
   if !destination_file.exists?
     logger.info "ERROR: File was not copied to destination bucket properly."
@@ -90,6 +91,7 @@ def delete_file bucket_name:, file_name:
 
   if file.exists?
     file.delete
+    logger.info "Deleting file: #{file_name}, from bucket: #{bucket_name}"
   else
     logger.info "ERROR: File does not exist in source bucket"
     exit(1)
@@ -100,11 +102,6 @@ def move_and_delete(sb, sf, db, df)
   copy_file(source_bucket_name: sb, source_file_name: sf, 
             destination_bucket_name: db, destination_file_name: df)
   delete_file(bucket_name: sb, file_name: sf)
-  
-  if DEBUG 
-    logger.debug "In 'move_and_delete'."
-    logger.debug "Trying: #{sf} moved from source: #{sb} -> destination: #{db}"
-  end
 end
 
 FunctionsFramework.http "gcs_move_file" do |request|

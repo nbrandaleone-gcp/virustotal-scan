@@ -43,9 +43,20 @@
                 object: ${object}
               timeout: 1800
             result: verdict
-            next: return_verdict
-        - return_verdict:
-            return: ${verdict.body}
+        - extract_new_score:
+            assign:
+              - new_score: ${verdict.body.score}
+        - private_move_file:
+            call: http.post
+            args:
+              url: https://ruby-move-file-yspciwmbia-uc.a.run.app
+              body: 
+                score:  ${new_score}
+                bucket: ${bucket}
+                object: ${object}
+            result: move_status
+        - return_move_status:
+            return: ${move_status}
         - move_file:
             call: http.post
             args:
