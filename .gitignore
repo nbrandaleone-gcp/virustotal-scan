@@ -1,3 +1,10 @@
 #Ignore .env file
 virus-scan/.env
-destination-bucket/.env
+move-file/.env
+trigger-job/.env
+virus-scan/.env
+private-upload-job/.env
+
+# Ignore directory
+experiment/
+test-files/

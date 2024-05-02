@@ -1,4 +1,4 @@
-# app.rb
+# virus-scan/app.rb
 #
 # Author: Nick Brandaleone <nbrand@mac.com>
 # Date: March 2024
@@ -25,8 +25,7 @@ FunctionsFramework.on_startup do
   # which forces a rebuild during every deploy, it can work in Production as well.
   Dotenv.load 
   
-  # Any value will make DEBUG true.
-  DEBUG = ENV["DEBUG"] || false
+  DEBUG = ENV.fetch('DEBUG', false)
   if DEBUG
     logger.debug!
     logger.debug "DEBUG is true"  # warn is a Kernel method, shortcut for STDERR

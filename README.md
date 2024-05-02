@@ -2,13 +2,13 @@
 
 This repo contains code and directions to set up a Google Cloud [Workflows](https://cloud.google.com/workflows?hl=en),
 that integrates with [VirusTotal](https://www.virustotal.com/gui/home/upload) to scan files,
-and move them into appropriate Storage Buckets. Three Cloud Functions,
+and move them into appropriate Storage Buckets. Two Cloud Functions,
 written in [Ruby](https://www.ruby-lang.org/en/), do the various checks and API calls to
 VirusTotal in order to determine if the files are safe. Once a determination has been made,
 the file is moved into a "safe" or "quarantine" bucket. If we can't determine the status 
 of the file, we leave it in the original bucket.
 
-A third CF has been recently added to the workflow.  If the scan using the public
+A third function has been recently added to the workflow.  If the scan using the public
 VirusTotal endpoint fails (i.e. the signature is new and not yet in the public DB),
 we then initiate a scan using the private API. Once a determination has been made,
 the file is moved to the appropriate bucket. The private API requires a *paid* subscription
@@ -16,11 +16,23 @@ to VirusTotal.  If you do not have access to the private endpoints, simply skip
 the deployment of the third Cloud Function.  The workflows logic will have to be
 modified to ignore this function.
 
+The third function is a Cloud Run Job.  Such jobs have a long time out (up to 24 hours),
+and they do not need to have a web-server to handle requests. While Workflows
+does have a [connector](https://cloud.google.com/workflows/docs/tutorials/execute-cloud-run-jobs#gcloud_4) to Cloud Run Jobs, unfortunately it is synchronous in nature.  The timeout is 30 minutes,
+and that is just too short for the VirusTotal private API to return a result in many cases.
+Therefore, I created a small trigger function, which then kicks off the Cloud Run Job.
+The Workflows callback can wait for up to 12 hours for the Job to respond. 
+
+I had to add the IAM roles/workflows.invoker to the Cloud Run Job permissions, in order
+to invoke the callback endpoint.
+
+So, we now have 4 functions running in this rapidly expanding micro-services environment.
+
 Workflow architecture:
 ![Architectural diagram](./workflow-diagram.png)
 
 > [!NOTE]
-> The diagram does not reflect the addition of the third Cloud Function into the workflow.
+> The diagram does not reflect the addition of the third and fourth Cloud Function into the workflow.
 
 ## Cloud Functions and Functions Framework
 
@@ -35,8 +47,9 @@ Cloud Functions are meant to be small chunks of code that are typical event-driv
 2. Add VirusTotal API key into [Google Secrets Manager](https://cloud.google.com/security/products/secret-manager)
 3. Create x3 Cloud Storage Buckets for project
 4. Deploy Cloud Functions
-5. Deploy Workflows
-6. Create EventArc trigger to start Workflow
+5. Create Cloud Run Job
+6. Deploy Workflows
+7. Create EventArc trigger to start Workflow
 
 ## Gotchas
 
@@ -139,6 +152,7 @@ Or, they can be written into a file called ".env" in the CF root directory.
 
 ```shell
 # .env file
+
 project_id = "my_cloud_project"
 ...
 ```
@@ -147,6 +161,25 @@ Or, via runtime injection:
 
 ```shell
 gcloud functions deploy FUNCTION_NAME --set-env-vars FOO=bar,BAZ=boo FLAGS...
+```
+
+## Deploy a Cloud Run Job
+
+```shell
+cd virustotal-scan/private-upload-job
+
+# Build the container
+gcloud builds submit \
+    --tag us-central1-docker.pkg.dev/testing-355714/my-docker-repo/private-upload-job:0.1
+
+# Deploy the Job
+gcloud run jobs deploy private-upload-job \
+      --image=us-central1-docker.pkg.dev/testing-355714/my-docker-repo/private-upload-job:0.1 \
+      --region='us-central1' \
+      --tasks='1' \
+      --task-timeout='3600' \
+      --max-retries='2' \
+      --set-env-vars='bucket=nbrandaleone-testing'
 ```
 
 ## Create a Workflow
@@ -265,6 +298,7 @@ gsutil rb [-f] gs://<bucket_name>...
 
 - https://cloud.google.com/workflows/docs/reference/syntax/syntax-cheat-sheet
 - [Dealing with Workflows timeout issues](https://medium.com/google-cloud/long-running-http-calls-with-gcp-workflows-the-theory-cad54bae6fdd)
+- [How to integrate Cloud Jobs with Workflows](https://medium.com/@hello_9187/making-a-serverless-http-endpoint-for-cloud-run-jobs-5e581412e5e1)
 
 ### Malware test file
 
