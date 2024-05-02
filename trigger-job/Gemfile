@@ -1,0 +1,13 @@
+source "https://rubygems.org"
+
+gem 'functions_framework', '~> 1.4.1'
+gem 'google-cloud-run-v2', '~> 0.15.0'
+gem 'dotenv', '~> 3.1.0'
+
+# group :test do
+# gem 'minitest'
+# gem 'minitest-reporters'
+# gem 'rack-test'
+# gem 'rake'
+# gem 'nokogiri'
+# end
