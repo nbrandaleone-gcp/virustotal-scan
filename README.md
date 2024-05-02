@@ -12,15 +12,14 @@ A third function has been recently added to the workflow.  If the scan using the
 VirusTotal endpoint fails (i.e. the signature is new and not yet in the public DB),
 we then initiate a scan using the private API. Once a determination has been made,
 the file is moved to the appropriate bucket. The private API requires a *paid* subscription
-to VirusTotal.  If you do not have access to the private endpoints, simply skip
-the deployment of the third Cloud Function.  The workflows logic will have to be
-modified to ignore this function.
+to VirusTotal.  If you do not have access to private endpoints, simply skip
+the deployment of this third function.
 
 The third function is a Cloud Run Job.  Such jobs have a long time out (up to 24 hours),
 and they do not need to have a web-server to handle requests. While Workflows
 does have a [connector](https://cloud.google.com/workflows/docs/tutorials/execute-cloud-run-jobs#gcloud_4) to Cloud Run Jobs, unfortunately it is synchronous in nature.  The timeout is 30 minutes,
 and that is just too short for the VirusTotal private API to return a result in many cases.
-Therefore, I created a small trigger function, which then kicks off the Cloud Run Job.
+I also created a small trigger function, which kicks off the Cloud Run Job.
 The Workflows callback can wait for up to 12 hours for the Job to respond. 
 
 I had to add the IAM roles/workflows.invoker to the Cloud Run Job permissions, in order
