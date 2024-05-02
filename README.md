@@ -15,12 +15,12 @@ the file is moved to the appropriate bucket. The private API requires a *paid* s
 to VirusTotal.  If you do not have access to private endpoints, simply skip
 the deployment of this third function.
 
-The third function is a Cloud Run Job.  Such jobs have a long time out (up to 24 hours),
+The third function is a Cloud Run Job.  Such jobs have a long timeout (up to 24 hours),
 and they do not need to have a web-server to handle requests. While Workflows
 does have a [connector](https://cloud.google.com/workflows/docs/tutorials/execute-cloud-run-jobs#gcloud_4) to Cloud Run Jobs, unfortunately it is synchronous in nature.  The timeout is 30 minutes,
 and that is just too short for the VirusTotal private API to return a result in many cases.
-I also created a small trigger function, which kicks off the Cloud Run Job.
-The Workflows callback can wait for up to 12 hours for the Job to respond. 
+Therefore, I created a small asynchronous trigger function, which kicks off the Cloud Run
+Job. The Workflows callback can wait for up to 12 hours for the Job to respond. 
 
 I had to add the IAM roles/workflows.invoker to the Cloud Run Job permissions, in order
 to invoke the callback endpoint.
@@ -31,7 +31,7 @@ Workflow logical architecture:
 ![Logical diagram](./logical-flow.png)
 
 Workflow physical architecture:
-[!Architectural diagram](./workflow-diagram.png)
+![Architectural diagram](./workflow-diagram.png)
 
 ## Cloud Functions and Functions Framework
 
