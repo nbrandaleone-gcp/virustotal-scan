@@ -27,11 +27,11 @@ to invoke the callback endpoint.
 
 So, we now have 4 functions running in this rapidly expanding micro-services environment.
 
-Workflow architecture:
-![Architectural diagram](./logical-flow.png)
+Workflow logical architecture:
+![Logical diagram](./logical-flow.png)
 
-> [!NOTE]
-> The diagram does not reflect the addition of the third and fourth Cloud Function into the workflow.
+Workflow physical architecture:
+[!Architectural diagram](./workflow-diagram.png)
 
 ## Cloud Functions and Functions Framework
 
