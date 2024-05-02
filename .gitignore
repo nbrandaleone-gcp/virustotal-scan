@@ -8,3 +8,4 @@ private-upload-job/.env
 # Ignore directory
 experiment/
 test-files/
+diagrams/
