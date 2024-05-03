@@ -5,15 +5,13 @@ that integrates with [VirusTotal](https://www.virustotal.com/gui/home/upload) to
 and move them into appropriate Storage Buckets. Two Cloud Functions,
 written in [Ruby](https://www.ruby-lang.org/en/), do the various checks and API calls to
 VirusTotal in order to determine if the files are safe. Once a determination has been made,
-the file is moved into a "safe" or "quarantine" bucket. If we can't determine the status 
-of the file, we leave it in the original bucket.
+the file is moved into a "safe" or "quarantine" bucket. 
 
 A third function has been recently added to the workflow.  If the scan using the public
 VirusTotal endpoint fails (i.e. the signature is new and not yet in the public DB),
 we then initiate a scan using the private API. Once a determination has been made,
 the file is moved to the appropriate bucket. The private API requires a *paid* subscription
-to VirusTotal.  If you do not have access to private endpoints, simply skip
-the deployment of this third function.
+to VirusTotal.  
 
 The third function is a Cloud Run Job.  Such jobs have a long timeout (up to 24 hours),
 and they do not need to have a web-server to handle requests. While Workflows
