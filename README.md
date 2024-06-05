@@ -144,6 +144,15 @@ quarantine_bucket = "bad-bucket"
 | version_id | Secrets Manager version number. Defaults to "1" |
 | DEBUG | false |
 
+**trigger-job:**
+All the environmental variables should be handled by
+the workflow, and it is not necessary to inject these manually.
+| Env Variable | Purpose                                         |
+| --------     | -------                                         |
+| bucket       | Source Google Cloud Bucket                      |
+| object       | File name                                       |
+| callback_url | The URL of the callback to receive result info  |
+
 These evironmental variables can be injected into the runtime environment at deploy time.
 Or, they can be written into a file called ".env" in the CF root directory.
 
