@@ -42,6 +42,7 @@ def get_secret_apikey
   if DEBUG
     logger.debug "project_id: #{project_id}"
     logger.debug "secret_id: #{secret_id}"
+    logger.debug "version_id: #{version_id}"
   end
   
   begin
